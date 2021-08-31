@@ -58,6 +58,7 @@ class st2::profile::rabbitmq (
     repos_ensure          => $repos_ensure,
     delete_guest_user     => true,
     port                  => $port,
+    manage_python         => false,
     environment_variables => {
       'RABBITMQ_NODE_IP_ADDRESS' => $::st2::rabbitmq_bind_ip,
     },

@@ -4,7 +4,7 @@ fixtures:
     st2: "#{source_dir}"
   repositories:
     rabbitmq:
-      repo: "git://github.com/EncoreTechnologies/puppet-rabbitmq"
+      repo: "git@github.com:EncoreTechnologies/puppet-rabbitmq"
       ref: "feature/fix-yum-repo"
   forge_modules:
     httpauth: "jamtur01/httpauth"

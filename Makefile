@@ -1,7 +1,8 @@
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CI_REPO_PATH ?= $(ROOT_DIR)/ci
-CI_REPO_BRANCH ?= master
+# CI_REPO_BRANCH ?= master
+CI_REPO_BRANCH ?= feature/python3_8-updates
 
 .PHONY: all
 all: .DEFAULT

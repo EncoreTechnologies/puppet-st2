@@ -83,7 +83,7 @@ jobs:
       matrix:
         include:
           # note: actions/setup-python only allows using a major.minor releases
-          - python: '3.6'
+          - python: '3.8'
             make_target: 'python3'
             name: 'bolt tasks'
     steps:

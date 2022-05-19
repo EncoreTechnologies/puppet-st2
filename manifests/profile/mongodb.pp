@@ -117,13 +117,14 @@ class st2::profile::mongodb (
           path        => $_mongodb_exec_path,
         }
         facter::fact { 'mongodb_auth_init':
-          value => value => bool2str(true),,
+          value => bool2str(true),
         }
 
         # start mongodb with auth disabled
         exec { 'mongodb - start service':
-          command => $_mongodb_start_cmd,
-          path    => $_mongodb_exec_path,
+          command     => $_mongodb_start_cmd,
+          refreshonly => true,
+          path        => $_mongodb_exec_path,
         }
 
         # enable auth

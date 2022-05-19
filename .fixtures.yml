@@ -5,7 +5,7 @@ fixtures:
   repositories:
     rabbitmq:
       repo: "https://github.com/EncoreTechnologies/puppet-rabbitmq"
-      ref: "feature/fix-yum-repo"
+      branch: "feature/fix-yum-repo"
   forge_modules:
     httpauth: "jamtur01/httpauth"
     stdlib: "puppetlabs/stdlib"

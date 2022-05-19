@@ -122,7 +122,7 @@ jobs:
           - ruby: '2.7'
             name: 'centos7-puppet7'
           - ruby: '2.7'
-            name: 'centos7-puppet7-python36'
+            name: 'centos7-puppet7-python38'
           - ruby: '2.7'
             name: 'ubuntu18-puppet6'
           - ruby: '2.7'

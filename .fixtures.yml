@@ -15,6 +15,8 @@ fixtures:
     inifile: "puppetlabs/inifile"
     mongodb: "puppet/mongodb"
     rabbitmq: "puppet/rabbitmq"
+      git: 'https://github.com/EncoreTechnologies/puppet-rabbitmq.git',
+      branch: 'feature/fix-yum-repo'
     facter: "ghoneycutt/facter"
     selinux: "puppet/selinux"
     nginx: "puppet/nginx"

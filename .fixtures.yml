@@ -2,10 +2,6 @@
 fixtures:
   symlinks:
     st2: "#{source_dir}"
-  repositories:
-    rabbitmq:
-      repo: "https://github.com/EncoreTechnologies/puppet-rabbitmq"
-      branch: "feature/fix-yum-repo"
   forge_modules:
     httpauth: "jamtur01/httpauth"
     stdlib: "puppetlabs/stdlib"
@@ -18,7 +14,7 @@ fixtures:
     python: "puppet/python"
     inifile: "puppetlabs/inifile"
     mongodb: "puppet/mongodb"
-    # rabbitmq: "puppet/rabbitmq"
+    rabbitmq: "puppet/rabbitmq"
     facter: "ghoneycutt/facter"
     selinux: "puppet/selinux"
     nginx: "puppet/nginx"

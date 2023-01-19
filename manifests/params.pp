@@ -201,6 +201,7 @@ class st2::params(
   $erlang_packages = [
     'erlang',
   ]
+  $manage_epel_repo = true
 
   ## Redis
   $redis_bind_ip = '127.0.0.1'

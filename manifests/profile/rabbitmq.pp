@@ -32,6 +32,7 @@ class st2::profile::rabbitmq (
   $erlang_key_id     = $st2::erlang_key_id,
   $erlang_key_source = $st2::erlang_key_source,
   $erlang_packages   = $st2::erlang_packages,
+  $manage_epel_repo  = $st2::manage_epel_repo,
 ) inherits st2 {
 
   # RHEL 8 Requires another repo in addition to epel to be installed
@@ -124,11 +125,13 @@ class st2::profile::rabbitmq (
     Class['epel']
     -> Class['rabbitmq']
 
-    Yumrepo['epel']
-    -> Class['rabbitmq']
+    if $manage_epel_repo {
+      Yumrepo['epel']
+      -> Class['rabbitmq']
 
-    Yumrepo['epel']
-    -> Package['rabbitmq-server']
+      Yumrepo['epel']
+      -> Package['rabbitmq-server']
+    }
   }
   # Debian/Ubuntu needs erlang before rabbitmq
   elsif $facts['os']['family'] == 'Debian' {

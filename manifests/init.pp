@@ -218,6 +218,8 @@
 #   The gpg key for the erlang repositiory to be used for rabbitmq
 # @param validate_output_schema
 #   Enable/disable output schema validation in StackStorm
+# @param manage_epel_repo
+#   Enable/disable management of epel repo
 #
 #
 # @example Basic Usage
@@ -357,6 +359,7 @@ class st2(
   $metric_host              = $st2::params::metric_host,
   $metric_port              = $st2::params::metric_port,
   $validate_output_schema   = $st2::params::validate_output_schema,
+  $manage_epel_repo         = $st2::params::manage_epel_repo,
 ) inherits st2::params {
 
   ########################################

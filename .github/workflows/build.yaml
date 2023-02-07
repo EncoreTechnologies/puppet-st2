@@ -26,6 +26,10 @@ jobs:
             check: "check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
             name: 'static'
           - ruby: '2.7'
+            puppet: "6.0"
+            check: "parallel_spec"
+            name: 'spec'
+          - ruby: '2.7'
             puppet: "7.0"
             check: "parallel_spec"
             name: 'spec'
@@ -135,7 +139,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Setup Ruby
-        uses: actions/setup-ruby@v1
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: '${{ matrix.ruby }}'
       - name: Bundle prep

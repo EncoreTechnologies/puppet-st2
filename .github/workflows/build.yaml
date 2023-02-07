@@ -25,21 +25,26 @@ jobs:
             puppet: "7.0"
             check: "check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
             name: 'static'
+            gem: '3.1.6'
           - ruby: '2.6'
             puppet: "6.0"
             check: "parallel_spec"
             name: 'spec'
+            gem: '3.2.3'
           - ruby: '2.7'
             puppet: "7.0"
             check: "parallel_spec"
             name: 'spec'
+            gem: '3.1.6'
           - ruby: '2.7'
             puppet: "7.0"
             check: 'strings:generate[,,,,,,"--fail-on-warning"]'
             name: "documentation"
+            gem: '3.1.6'
     env:
       CHECK: '${{ matrix.check }}'
       PUPPET_GEM_VERSION: '~> ${{ matrix.puppet }}'
+      RUBYGEMS_VERSION: '${{ matrix.check }}'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2

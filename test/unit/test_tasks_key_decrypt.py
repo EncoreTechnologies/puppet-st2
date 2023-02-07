@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'files'))
 from st2_task_base import St2TaskBase
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'tasks'))
-from key_get import AESKey
+from key_decrypt import AESKey
 
 
 class AESKeyTestCase(St2TestCase):

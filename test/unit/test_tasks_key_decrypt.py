@@ -1,5 +1,5 @@
 from test.unit.st2_test_case import St2TestCase
-import mock
+# import mock
 import os
 import sys
 

@@ -44,7 +44,7 @@ jobs:
     env:
       CHECK: '${{ matrix.check }}'
       PUPPET_GEM_VERSION: '~> ${{ matrix.puppet }}'
-      RUBYGEMS_VERSION: '${{ matrix.check }}'
+      RUBYGEMS_VERSION: '${{ matrix.gem }}'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2

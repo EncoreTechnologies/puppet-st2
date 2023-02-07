@@ -14,5 +14,5 @@ class AESKeyTestCase(St2TestCase):
     __test__ = True
 
     def test_init(self):
-        task = AESKey()
+        task = AESKey('test', 'test', 256)
         self.assertIsInstance(task, St2TaskBase)

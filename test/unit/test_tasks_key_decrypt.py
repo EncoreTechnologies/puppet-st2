@@ -2,9 +2,9 @@ from test.unit.st2_test_case import St2TestCase
 # import mock
 import os
 import sys
+from key_decrypt import AESKey
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'tasks'))
-from key_decrypt import AESKey
 
 
 class AESKeyTestCase(St2TestCase):

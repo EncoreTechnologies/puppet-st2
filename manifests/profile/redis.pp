@@ -16,7 +16,7 @@ class st2::profile::redis (
 ) inherits st2 {
 
   class { 'redis':
-      bind => $bind_ip,
+    bind => $bind_ip,
   }
 
   contain redis

@@ -16,7 +16,7 @@ RUN chmod 0600 /home/<%= @username %>/.ssh/authorized_keys
 RUN echo '<%= IO.read(@public_key).strip %>' >> /home/<%= @username %>/.ssh/authorized_keys
 
 # upgrade the image, otherwise installing st2 package hangs
-RUN yum -y upgrade
+RUN yum -y upgrade --exclude=openssh*
 
 # install doc files (/usr/share/docs) when installing yum packages
 # otherwise /usr/share/docs/st2/conf/nginx/st2.conf won't be present

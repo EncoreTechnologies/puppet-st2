@@ -2,6 +2,10 @@
 
 ## Development
 
+## 2.5.1 (June 8, 2023)
+
+- Fixed issues where NodeJS was being uninstalled/re-installed on every run @asktheaxis
+
 ## 2.5.0 (June 29, 2022)
 
 - Move CentOS -> RockyLinux and Python 3.6 -> 3.8. Contributed by @rush-skills

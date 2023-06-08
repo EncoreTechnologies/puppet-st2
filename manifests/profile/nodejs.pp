@@ -64,6 +64,7 @@ class st2::profile::nodejs(
       class { 'nodejs':
         repo_url_suffix     => $nodejs_version,
         manage_package_repo => $manage_repo,
+        npm_package_ensure => 'present',
       }
       # When upgrading from NodeJS 6 installed with EPEL to NodeJS 10+
       # from the NodeSource repo, we need to remove the npm package.

@@ -72,6 +72,8 @@
 #   CLI config - API URL
 # @param cli_auth_url
 #   CLI config - Auth URL
+# @param cli_cacert
+#   CLI config - CA Cert Path
 # @param actionrunner_workers
 #   Set the number of actionrunner processes to start
 # @param packs
@@ -288,6 +290,7 @@ class st2(
   $cli_apikey                 = undef,
   $cli_api_url                = "http://${st2::params::hostname}:${st2::params::api_port}",
   $cli_auth_url               = "http://${st2::params::hostname}:${st2::params::auth_port}",
+  $cli_cacert                 = '',
   $actionrunner_workers       = $st2::params::actionrunner_workers,
   $packs                      = {},
   $packs_group                = $st2::params::packs_group_name,

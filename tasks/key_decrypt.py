@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # TODO
 # This is a hack until 'st2 key load' and `st2 key set' accept encrypted values

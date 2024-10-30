@@ -117,7 +117,7 @@ class st2::profile::mongodb (
           path        => $_mongodb_exec_path,
         }
         facter::fact { 'mongodb_auth_init':
-          value => bool2str(true),
+          value => 'true',
         }
 
         # start mongodb with auth disabled

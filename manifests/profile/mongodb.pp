@@ -96,7 +96,7 @@ class st2::profile::mongodb (
       #
       # To prevent this from running every time we've create a puppet fact
       # called $mongodb_auth_init that is set when
-      if !$facts['mongodb_auth_init'] {
+      if $facts['mongodb_auth_init'] != 'true' {
         # unfortinately there is no way to synchronously force a service restart
         # in Puppet, so we have to revert to exec... sorry
         include mongodb::params

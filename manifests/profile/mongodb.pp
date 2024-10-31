@@ -84,6 +84,10 @@ class st2::profile::mongodb (
         admin_password => $db_password,
       }
 
+      facter::fact { 'mongodb_auth_init':
+        value => 'true',
+      }
+
       # In puppet-mongodb module, latest versions used with Puppet >= 4, the
       # auth parameter is broken and doesn't work properly on the first run.
       # https://github.com/voxpupuli/puppet-mongodb/issues/437
@@ -96,7 +100,7 @@ class st2::profile::mongodb (
       #
       # To prevent this from running every time we've create a puppet fact
       # called $mongodb_auth_init that is set when
-      if $facts['mongodb_auth_init'] != 'true' {
+      if !$facts['mongodb_auth_init'] {
         # unfortinately there is no way to synchronously force a service restart
         # in Puppet, so we have to revert to exec... sorry
         include mongodb::params
@@ -115,9 +119,6 @@ class st2::profile::mongodb (
           command     => 'sed -i \'s/security.authorization: enabled/security.authorization: disabled/g\' /etc/mongod.conf',
           refreshonly => true,
           path        => $_mongodb_exec_path,
-        }
-        facter::fact { 'mongodb_auth_init':
-          value => 'true',
         }
 
         # start mongodb with auth disabled

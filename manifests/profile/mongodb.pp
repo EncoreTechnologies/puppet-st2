@@ -84,6 +84,11 @@ class st2::profile::mongodb (
         admin_password => $db_password,
       }
 
+      # Ensure the mongodb_auth_init fact is always included
+      facter::fact { 'mongodb_auth_init':
+        value => bool2str($facts['mongodb_auth_init']),
+      }
+
       # In puppet-mongodb module, latest versions used with Puppet >= 4, the
       # auth parameter is broken and doesn't work properly on the first run.
       # https://github.com/voxpupuli/puppet-mongodb/issues/437

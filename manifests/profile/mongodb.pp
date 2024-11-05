@@ -116,9 +116,6 @@ class st2::profile::mongodb (
           refreshonly => true,
           path        => $_mongodb_exec_path,
         }
-        facter::fact { 'mongodb_auth_init':
-          value => bool2str(true),
-        }
 
         # start mongodb with auth disabled
         exec { 'mongodb - start service':
@@ -153,14 +150,12 @@ class st2::profile::mongodb (
           timeout => '240',
         }
 
-
         # ensure MongoDB config is present and service is running
         Class['mongodb::server::config']
         -> Class['mongodb::server::service']
         # stop mongodb; disable auth
         -> Exec['mongodb - stop service']
         ~> Exec['mongodb - disable auth']
-        ~> Facter::Fact['mongodb_auth_init']
         # start mongodb with auth disabled
         ~> Exec['mongodb - start service']
         # create mongodb admin database with auth disabled
@@ -172,6 +167,11 @@ class st2::profile::mongodb (
         ~> Mongodb_conn_validator['mongodb - wait for restart']
         # create other databases
         -> Mongodb::Db <| title != 'admin' |>
+
+        # Set the fact after the setup process completes
+        facter::fact { 'mongodb_auth_init':
+          value => bool2str(true),
+        }
       }
     }
     else {
@@ -231,5 +231,4 @@ class st2::profile::mongodb (
       require  => Class['mongodb::server'],
     }
   }
-
 }

@@ -40,15 +40,7 @@ class st2::profile::mongodb (
   $auth        = $st2::mongodb_auth,
 ) inherits st2 {
   # Define the marker file path
-  $marker_file = '/etc/st2/mongodb/.mongodb_auth_init'
-
-  # Ensure the directory for the marker file exists
-  file { '/etc/st2/mongodb':
-    ensure => directory,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-  }
+  $marker_file = '/etc/.mongodb_auth_init'
 
   # if Ubuntu is 20.04 then MongoDB 4.4
   # if the StackStorm version is > 3.3.0 then MongoDB 4.0
@@ -106,7 +98,7 @@ class st2::profile::mongodb (
       # database, then re-enables auth.
       #
       # To prevent this from running every time, we use a marker file
-      # located at /etc/st2/mongodb/.mongodb_auth_init to indicate that
+      # located at /etc/.mongodb_auth_init to indicate that
       # the initialization is complete.
       file { $marker_file:
         ensure => absent,

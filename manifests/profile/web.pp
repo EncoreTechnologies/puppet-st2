@@ -126,6 +126,7 @@ class st2::profile::web(
     ssl_redirect => true,
     add_header   => $add_header,
     tag          => ['st2', 'st2::frontend', 'st2::frontend::http'],
+    notify       => Service['nginx'],
   }
 
   # convert arrays into strings if necessary
@@ -164,6 +165,7 @@ class st2::profile::web(
       ],
     },
     tag                  => ['st2', 'st2::frontend', 'st2::frontend::https'],
+    notify               => Service['nginx'],
   }
 
   # default settings for all locations

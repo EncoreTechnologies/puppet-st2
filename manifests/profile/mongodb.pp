@@ -39,6 +39,9 @@ class st2::profile::mongodb (
   $manage_repo = $st2::mongodb_manage_repo,
   $auth        = $st2::mongodb_auth,
 ) inherits st2 {
+  # Define the marker file path
+  $marker_file = '/var/lib/mongodb/.mongodb_auth_init'
+
   # if Ubuntu is 20.04 then MongoDB 4.4
   # if the StackStorm version is > 3.3.0 then MongoDB 4.0
   # if the StackStorm version is > 2.4.0 then MongoDB 3.4
@@ -96,8 +99,8 @@ class st2::profile::mongodb (
       #
       # To prevent this from running every time we've create a puppet fact
       # called $mongodb_auth_init that is set when
-      if !$facts['mongodb_auth_init'] {
-        # unfortinately there is no way to synchronously force a service restart
+      if !file($marker_file) {
+        # unfortunately there is no way to synchronously force a service restart
         # in Puppet, so we have to revert to exec... sorry
         include mongodb::params
         $_mongodb_stop_cmd = "systemctl stop ${mongodb::params::service_name}"
@@ -115,9 +118,6 @@ class st2::profile::mongodb (
           command     => 'sed -i \'s/security.authorization: enabled/security.authorization: disabled/g\' /etc/mongod.conf',
           refreshonly => true,
           path        => $_mongodb_exec_path,
-        }
-        facter::fact { 'mongodb_auth_init':
-          value => bool2str(true),
         }
 
         # start mongodb with auth disabled
@@ -153,6 +153,11 @@ class st2::profile::mongodb (
           timeout => '240',
         }
 
+        # Create the marker file to indicate initialization is complete
+        file { $marker_file:
+          ensure  => file,
+          content => 'Initialization complete',
+        }
 
         # ensure MongoDB config is present and service is running
         Class['mongodb::server::config']
@@ -160,7 +165,6 @@ class st2::profile::mongodb (
         # stop mongodb; disable auth
         -> Exec['mongodb - stop service']
         ~> Exec['mongodb - disable auth']
-        ~> Facter::Fact['mongodb_auth_init']
         # start mongodb with auth disabled
         ~> Exec['mongodb - start service']
         # create mongodb admin database with auth disabled
@@ -231,5 +235,4 @@ class st2::profile::mongodb (
       require  => Class['mongodb::server'],
     }
   }
-
 }

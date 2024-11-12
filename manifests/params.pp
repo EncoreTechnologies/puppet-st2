@@ -17,13 +17,11 @@
 #   }
 #   include st2::profile::fullinstall
 #
-class st2::params(
-  $packs_group_name = 'st2packs',
-  $hostname         = '127.0.0.1',
+class st2::params {
+  $hostname         = '127.0.0.1'
   ## StackStorm default credentials (change these!)
-  $admin_username   = 'st2admin',
-  $admin_password   = 'Ch@ngeMe',
-) {
+  $admin_username   = 'st2admin'
+  $admin_password   = 'Ch@ngeMe'
 
   # SSL settings
   $use_ssl  = false
@@ -62,10 +60,6 @@ class st2::params(
   $datastore_hmac_size = 256
   $datastore_aes_mode = 'CBC'
   $datastore_aes_size = 256
-
-  $manage_epel_repo = true
-  $python_use_epel_repo = true
-  $redis_manage_repo = false
 
   $st2_server_packages = [
     'st2',

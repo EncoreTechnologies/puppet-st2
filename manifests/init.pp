@@ -218,6 +218,53 @@
 #   The gpg key for the erlang repositiory to be used for rabbitmq
 # @param validate_output_schema
 #   Enable/disable output schema validation in StackStorm
+# @param hostname
+#   Hostname of the StackStorm server.  This is used as the default to drive a lot of
+#   other parameters in the st2 class such as auth URL, MongoDB host, RabbitMQ host, etc.
+#   (default: 127.0.0.1)
+# @param admin_password
+#   Password of the StackStorm admin user.
+# @param admin_username
+#   Username of the StackStorm admin user.
+# @param api_port
+# @param auth_port
+# @param cli_silence_ssl_warnings
+# @param datastore_aes_key
+# @param datastore_aes_mode
+# @param datastore_aes_size
+# @param datastore_hmac_key
+# @param datastore_hmac_size
+# @param datastore_keys_dir
+# @param datastore_key_path
+# @param erlang_key_id
+# @param erlang_key_source
+# @param erlang_packages
+# @param erlang_rhel_gpgcheck
+# @param erlang_rhel_repo_gpgcheck
+# @param erlang_rhel_sslcacert_location
+# @param erlang_rhel_sslverify
+# @param manage_datastore_key
+# @param manage_epel_repo
+# @param metric_driver
+# @param metric_host
+# @param metric_port
+# @param metrics_include
+# @param ng_init
+# @param nginx_basicstatus_enabled
+# @param nginx_basicstatus_port
+# @param python_use_epel_repo
+# @param rabbitmq_bind_ip
+# @param rabbitmq_hostname
+# @param rabbitmq_password
+# @param rabbitmq_port
+# @param rabbitmq_username
+# @param rabbitmq_vhost
+# @param redis_hostname
+# @param redis_manage_repo
+# @param redis_password
+# @param redis_port
+# @param stream_port
+
 #
 #
 # @example Basic Usage
@@ -258,129 +305,134 @@
 #   class { 'st2':
 #     python_version            => $st2_python_version,
 #   }
-class st2(
-  $version                    = 'present',
-  String  $python_version     = 'system',
-  St2::Repository $repository = $st2::params::repository,
-  $manage_epel_repo           = $st2::params::manage_epel_repo,
-  $python_use_epel_repo       = $st2::params::python_use_epel_repo,
-  $redis_manage_repo          = $st2::params::redis_manage_repo,
-  $conf_dir                   = $st2::params::conf_dir,
-  $conf_file                  = "${st2::params::conf_dir}/st2.conf",
-  $use_ssl                    = $st2::params::use_ssl,
-  $ssl_cert_manage            = true,
-  $ssl_dir                    = $st2::params::ssl_dir,
-  $ssl_cert                   = $st2::params::ssl_cert,
-  $ssl_key                    = $st2::params::ssl_key,
-  $auth                       = true,
-  $auth_api_url               = "http://${st2::params::hostname}:${st2::params::api_port}",
-  $auth_debug                 = false,
-  $auth_mode                  = $st2::params::auth_mode,
-  $auth_backend               = $st2::params::auth_backend,
-  $auth_backend_config        = $st2::params::auth_backend_config,
-  $cli_base_url               = "http://${st2::params::hostname}",
-  $cli_api_version            = 'v1',
-  $cli_debug                  = false,
-  $cli_cache_token            = true,
-  $cli_silence_ssl_warnings   = false,
-  $cli_username               = $st2::params::admin_username,
-  $cli_password               = $st2::params::admin_password,
-  $cli_apikey                 = undef,
-  $cli_api_url                = "http://${st2::params::hostname}:${st2::params::api_port}",
-  $cli_auth_url               = "http://${st2::params::hostname}:${st2::params::auth_port}",
-  $actionrunner_workers       = $st2::params::actionrunner_workers,
-  $packs                      = {},
-  $packs_group                = $st2::params::packs_group_name,
-  $index_url                  = undef,
-  $syslog                     = false,
-  $syslog_host                = 'localhost',
-  $syslog_protocol            = 'udp',
-  $syslog_port                = 514,
-  $syslog_facility            = 'local7',
-  $ssh_key_location           = '/home/stanley/.ssh/st2_stanley_key',
-  $db_host                    = $st2::params::hostname,
-  $db_port                    = $st2::params::mongodb_port,
-  $db_bind_ips                = $st2::params::mongodb_bind_ips,
-  $db_name                    = $st2::params::mongodb_st2_db,
-  $db_username                = $st2::params::mongodb_st2_username,
-  $db_password                = $st2::params::admin_password,
-  $mongodb_version            = undef,
-  $mongodb_manage_repo        = true,
-  $mongodb_auth               = true,
-  $ng_init                    = true,
-  $datastore_keys_dir         = $st2::params::datstore_keys_dir,
-  $datastore_key_path         = "${st2::params::datstore_keys_dir}/datastore_key.json",
-  $manage_datastore_key       = $st2::params::manage_datastore_key,
-  $datastore_hmac_size        = $st2::params::datastore_hmac_size,
-  $datastore_hmac_key         = $st2::params::datastore_hmac_key,
-  $datastore_aes_key          = $st2::params::datastore_aes_key,
-  $datastore_aes_mode         = $st2::params::datastore_aes_mode,
-  $datastore_aes_size         = $st2::params::datastore_aes_size,
-  $nginx_basicstatus_enabled  = $st2::params::basicstatus_enabled,
-  $nginx_basicstatus_port     = $st2::params::basicstatus_port,
-  $nginx_manage_repo          = true,
-  $nginx_client_max_body_size = $st2::params::nginx_client_max_body_size,
-  $nginx_ssl_ciphers          = $st2::params::nginx_ssl_ciphers,
-  $nginx_ssl_port             = $st2::params::nginx_ssl_port,
-  $nginx_ssl_protocols        = $st2::params::nginx_ssl_protocols,
-  $web_root                   = $st2::params::web_root,
-  $rabbitmq_username          = $st2::params::rabbitmq_username,
-  $rabbitmq_password          = $st2::params::rabbitmq_password,
-  $rabbitmq_hostname          = $st2::params::rabbitmq_hostname,
-  $rabbitmq_port              = $st2::params::rabbitmq_port,
-  $rabbitmq_bind_ip           = $st2::params::rabbitmq_bind_ip,
-  $rabbitmq_vhost             = $st2::params::rabbitmq_vhost,
-  $erlang_url                 = $st2::params::erlang_url,
-  $erlang_key                 = $st2::params::erlang_key,
-  $erlang_key_id              = $st2::params::erlang_key_id,
-  $erlang_key_source          = $st2::params::erlang_key_source,
-  $erlang_packages            = $st2::params::erlang_packages,
-  $erlang_rhel_sslcacert_location = $st2::params::erlang_rhel_sslcacert_location,
-  $erlang_rhel_sslverify      = $st2::params::erlang_rhel_sslverify,
-  $erlang_rhel_gpgcheck       = $st2::params::erlang_rhel_gpgcheck,
-  $erlang_rhel_repo_gpgcheck  = $st2::params::erlang_rhel_repo_gpgcheck,
-  $redis_bind_ip              = $st2::params::redis_bind_ip,
-  $redis_hostname             = $st2::params::redis_hostname,
-  $redis_port                 = $st2::params::redis_port,
-  $redis_password             = $st2::params::redis_password,
-  $timersengine_enabled       = $st2::params::timersengine_enabled,
-  $timersengine_timezone      = $st2::params::timersengine_timezone,
-  $scheduler_sleep_interval   = $st2::params::scheduler_sleep_interval,
-  $scheduler_gc_interval      = $st2::params::scheduler_gc_interval,
-  $scheduler_pool_size        = $st2::params::scheduler_pool_size,
-  $chatops_adapter            = $st2::params::chatops_adapter,
-  $chatops_adapter_conf       = $st2::params::chatops_adapter_conf,
-  $chatops_hubot_log_level              = $st2::params::hubot_log_level,
-  $chatops_hubot_express_port           = $st2::params::hubot_express_port,
-  $chatops_tls_cert_reject_unauthorized = $st2::params::tls_cert_reject_unauthorized,
-  $chatops_hubot_name                   = $st2::params::hubot_name,
-  $chatops_hubot_alias                  = $st2::params::hubot_alias,
-  $chatops_api_key                      = undef,
-  $chatops_st2_hostname                 = $st2::params::hostname,
-  $chatops_api_url                      = "https://${st2::params::hostname}/api",
-  $chatops_auth_url                     = "https://${st2::params::hostname}/auth",
-  $chatops_web_url                      = undef,
-  $nodejs_version             = undef,
-  $nodejs_manage_repo         = true,
-  $workflowengine_num         = $st2::params::workflowengine_num,
-  $scheduler_num              = $st2::params::scheduler_num,
-  $rulesengine_num            = $st2::params::rulesengine_num,
-  $notifier_num               = $st2::params::notifier_num,
-  $metrics_include            = $st2::params::metrics_include,
-  $metric_driver              = $st2::params::metric_driver,
-  $metric_host                = $st2::params::metric_host,
-  $metric_port                = $st2::params::metric_port,
-  $validate_output_schema     = $st2::params::validate_output_schema,
+class st2 (
+  Stdlib::Hostname            $hostname                   = '127.0.0.1',
+  Integer                     $actionrunner_workers       = 10,
+  String[1]                   $admin_password             = undef,
+  String[1]                   $admin_username             = 'admin',
+  Stdlib::Port                $api_port                   = 9101,
+  Stdlib::HTTPUrl             $auth_api_url               = "http://${hostname}:${api_port}",
+  Hash                        $auth_backend_config        = $st2::params::auth_backend_config,
+  String                      $auth_backend               = 'flat_file',
+  Boolean                     $auth_debug                 = false,
+  String                      $auth_mode                  = 'standalone',
+  Stdlib::Port                $auth_port                  = 9100,
+  Boolean                     $auth                       = true,
+  Hash                        $chatops_adapter            = {},
+  Hash                        $chatops_adapter_conf       = $st2::params::chatops_adapter_conf,
+  Optional[String]            $chatops_api_key            = undef,
+  Stdlib::HTTPUrl             $chatops_api_url            = "https://${hostname}/api",
+  Stdlib::HTTPUrl             $chatops_auth_url           = "https://${hostname}/auth",
+  String                      $chatops_hubot_alias        = "'!'",
+  Stdlib::Port                $chatops_hubot_express_port = 8081,
+  String                      $chatops_hubot_log_level    = 'debug',
+  String                      $chatops_hubot_name         = '"hubot"',
+  Stdlib::Host                $chatops_st2_hostname       = $hostname,
+  Enum['0', '1']              $chatops_tls_cert_reject_unauthorized = '0',
+  Optional[Stdlib::HTTPUrl]   $chatops_web_url            = undef,
+  String                      $cli_apikey                 = undef,
+  Stdlib::HTTPUrl             $cli_api_url                = "http://${hostname}:${api_port}",
+  Patern[/v[0-9]+/]           $cli_api_version            = 'v1',
+  Stdlib::HTTPUrl             $cli_auth_url               = "http://${hostname}:${auth_port}",
+  Stdlib::HTTPUrl             $cli_base_url               = "http://${hostname}",
+  Boolean                     $cli_cache_token            = true,
+  Boolean                     $cli_debug                  = false,
+  String[1]                   $cli_password               = $admin_password,
+  Boolean                     $cli_silence_ssl_warnings   = false,
+  String[1]                   $cli_username               = 'st2admin',
+  Stdlib::Absolutepath        $conf_dir                   = '/etc/st2',
+  Stdlib::Absolutepath        $conf_file                  = "${conf_dir}/st2.conf",
+  Optional[String]            $datastore_aes_key          = undef,
+  String                      $datastore_aes_mode         = 'CBC',
+  Integer                     $datastore_aes_size         = 256,
+  Optional[String]            $datastore_hmac_key         = undef,
+  Integer                     $datastore_hmac_size        = 256,
+  Stdlib::Absolutepath        $datastore_keys_dir         = "${conf_dir}/keys",
+  Stdlib::Absolutepath        $datastore_key_path         = "${datastore_keys_dir}/datastore_key.json",
+  Array[Stdlib::IP::Address]  $db_bind_ips                = ['127.0.0.1'],
+  Stdlib::Host                $db_host                    = $hostname,
+  String[1]                   $db_name                    = 'st2',
+  String[1]                   $db_password                = $admin_password,
+  Stdlib::Port                $db_port                    = '27017',
+  String[1]                   $db_username                = 'stackstorm',
+  String                      $erlang_key                 = $st2::params::erlang_key,
+  String                      $erlang_key_id              = $st2::params::erlang_key_id,
+  String                      $erlang_key_source          = $st2::params::erlang_key_source,
+  Array[String[1]]            $erlang_packages            = ['erlang'],
+  Enum[0, 1]                  $erlang_rhel_gpgcheck       = 0,
+  Enum[0, 1]                  $erlang_rhel_repo_gpgcheck  = 1,
+  Stdlib::Absolutepath        $erlang_rhel_sslcacert_location = $st2::params::erlang_rhel_sslcacert_location,
+  Enum[0, 1]                  $erlang_rhel_sslverify      = 1,
+  Stdlib::HTTPUrl             $erlang_url                 = $st2::params::erlang_url,
+  Optional[Stdlib::HTTPUrl]   $index_url                  = undef,
+  Boolean                     $manage_datastore_key       = false,
+  Boolean                     $manage_epel_repo           = true,
+  String                      $metric_driver              = 'statsd',
+  Stdlib::Host                $metric_host                = $hostname,
+  Stdlib::Port                $metric_port                = 8125,
+  Boolean                     $metrics_include            = false,
+  Boolean                     $mongodb_auth               = true,
+  Boolean                     $mongodb_manage_repo        = true,
+  Optional[String]            $mongodb_version            = undef,
+  Boolean                     $ng_init                    = true,
+  Boolean                     $nginx_basicstatus_enabled  = false,
+  Stdlib::Port                $nginx_basicstatus_port     = 9103,
+  String[1]                   $nginx_client_max_body_size = '0',
+  Boolean                     $nginx_manage_repo          = true,
+  Array[String]               $nginx_ssl_ciphers          = $st2::params::nginx_ssl_ciphers,
+  Stdlib::Port                $nginx_ssl_port             = 443,
+  Array[String]               $nginx_ssl_protocols        = ['TLSv1.2', 'TLSv1.3'],
+  Boolean                     $nodejs_manage_repo         = true,
+  Optional[String]            $nodejs_version             = undef,
+  Integer[1]                  $notifier_num               = 1,
+  Variant[String, Hash]       $packs                      = {},
+  String[1]                   $packs_group                = 'st2packs',
+  Boolean                     $python_use_epel_repo       = true,
+  St2::Ensure                 $python_version             = 'system',
+  Stdlib::IP::Address         $rabbitmq_bind_ip           = '127.0.0.1',
+  Stdlib::Host                $rabbitmq_hostname          = $hostname,
+  String[1]                   $rabbitmq_password          = $admin_password,
+  Stdlib::Port                $rabbitmq_port              = 5672,
+  String[1]                   $rabbitmq_username          = $admin_username,
+  String                      $rabbitmq_vhost             = '/',
+  Stdlib::IP::Address         $redis_bind_ip              = '127.0.0.1',
+  Stdlib::Host                $redis_hostname             = $hostname,
+  Boolean                     $redis_manage_repo          = false,
+  String                      $redis_password             = undef,
+  Stdlib::Port                $redis_port                 = 6379,
+  St2::Repository             $repository                 = $st2::params::repository,
+  Integer[1]                  $rulesengine_num            = 1,
+  Integer[1]                  $scheduler_gc_interval      = 10,
+  Integer[1]                  $scheduler_num              = 1,
+  Integer[1]                  $scheduler_pool_size        = 10,
+  Float                       $scheduler_sleep_interval   = 0.1,
+  Stdlib::Absolutepath        $ssh_key_location           = '/home/stanley/.ssh/st2_stanley_key',
+  String                      $ssl_cert                   = "${ssl_dir}/st2.crt",
+  Boolean                     $ssl_cert_manage            = true,
+  Stdlib::Absolutepath        $ssl_dir                    = '/etc/ssl/st2',
+  String                      $ssl_key                    = "${ssl_dir}/st2.key",
+  Stdlib::Port                $stream_port                = 9102,
+  String[1]                   $syslog_facility            = 'local7',
+  Boolean                     $syslog                     = false,
+  Stdlib::Host                $syslog_host                = 'localhost',
+  Stdlib::Port                $syslog_port                = 514,
+  Enum['tcp', 'udp']          $syslog_protocol            = 'udp',
+  Boolean                     $timersengine_enabled       = true,
+  String[1]                   $timersengine_timezone      = 'America/New_York',
+  Boolean                     $use_ssl                    = false,
+  Boolean                     $validate_output_schema     = false,
+  St2::Ensure                 $version                    = 'present',
+  Stdlib::Absolutepath        $web_root                   = '/opt/stackstorm/static/webui',
+  Integer[1]                  $workflowengine_num         = 1,
 ) inherits st2::params {
-
   ########################################
   ## Control commands
-  exec {'/usr/bin/st2ctl reload --register-all':
+  exec { '/usr/bin/st2ctl reload --register-all':
     tag         => 'st2::reload',
     refreshonly => true,
   }
 
-  exec {'/usr/bin/st2ctl reload --register-configs':
+  exec { '/usr/bin/st2ctl reload --register-configs':
     tag         => 'st2::register-configs',
     refreshonly => true,
   }

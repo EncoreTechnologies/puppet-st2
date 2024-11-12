@@ -1,5 +1,7 @@
 # @summary Class that contains all of the "common" settings for auth.
 #
+# @api private
+#
 # @note Don't use directly
 #
 # @param api_url

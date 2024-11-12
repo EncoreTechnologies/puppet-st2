@@ -28,8 +28,7 @@
 function st2::version_ge(String $version) >> Boolean {
   # if StackStorm is not installed
   # if the current StackStorm version is >= compared version
-  if ($facts['st2_version'] == undef or
-      versioncmp($facts['st2_version'], $version) >= 0) {
+  if ($facts['st2_version'] == undef or versioncmp($facts['st2_version'], $version) >= 0) {
     $ge = true
   }
   # if StackStorm is installed and its version ils < compared version and
@@ -38,8 +37,7 @@ function st2::version_ge(String $version) >> Boolean {
   #  then the version is less (ie the user has installed an old version and we
   #  don't want to turn on features that may break their existing installation)
   elsif (versioncmp($facts['st2_version'], $version) < 0 and
-          ($st2::version == 'present' or
-            $st2::version == 'installed')) {
+  ($st2::version == 'present' or $st2::version == 'installed')) {
     $ge = false
   }
   # if the user-requested StackStorm version is 'latest' or
@@ -49,8 +47,7 @@ function st2::version_ge(String $version) >> Boolean {
   # FYI, do this comparison LAST because versioncmp('preset', '2.1.0') returns 1 (true)
   #  ie. we need to compare against the known $st2::versions before using versioncmp()
   #      with that variable.
-  elsif ($st2::version == 'latest' or
-          versioncmp($st2::version, $version) >= 0) {
+  elsif ($st2::version == 'latest' or versioncmp($st2::version, $version) >= 0) {
     $ge = true
   }
   # otherwise version is less

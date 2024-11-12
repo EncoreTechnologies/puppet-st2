@@ -30,20 +30,22 @@
 #   include st2::profile::mongodb
 #
 class st2::profile::mongodb (
-  $db_name     = $st2::db_name,
-  $db_username = $st2::db_username,
-  $db_password = $st2::db_password,
-  $db_port     = $st2::db_port,
-  $db_bind_ips = $st2::db_bind_ips,
-  $version     = $st2::mongodb_version,
-  $manage_repo = $st2::mongodb_manage_repo,
-  $auth        = $st2::mongodb_auth,
+  String                $db_name      = $st2::db_name,
+  String                $db_username  = $st2::db_username,
+  String                $db_password  = $st2::db_password,
+  Stdlib::Port          $db_port      = $st2::db_port,
+  Stdlib::IP::Address   $db_bind_ips  = $st2::db_bind_ips,
+  Optional[String]      $version      = $st2::mongodb_version,
+  Boolean               $manage_repo  = $st2::mongodb_manage_repo,
+  Boolean               $auth         = $st2::mongodb_auth,
 ) inherits st2 {
   # if Ubuntu is 20.04 then MongoDB 4.4
   # if the StackStorm version is > 3.3.0 then MongoDB 4.0
   # if the StackStorm version is > 2.4.0 then MongoDB 3.4
   # else use MongoDB 3.2
-  if $facts['os']['family'] == 'Debian' and $facts['os']['release']['major'] == '20.04' and st2::version_ge('3.3.0') {
+  if $facts['os']['family'] == 'Debian' and
+  $facts['os']['release']['major'] == '20.04' and
+  st2::version_ge('3.3.0') {
     $_mongodb_version_default = '4.4'
   }
   elsif st2::version_ge('3.3.0') {
@@ -65,11 +67,11 @@ class st2::profile::mongodb (
 
   if !defined(Class['mongodb::server']) {
     class { 'mongodb::globals':
-      manage_package      => true,
+      #manage_package      => true,
       manage_package_repo => $manage_repo,
       version             => $_mongodb_version,
-      bind_ip             => $db_bind_ips,
-      manage_pidfile      => false, # mongo will not start if this is true
+      #bind_ip             => $db_bind_ips,
+      #manage_pidfile      => false, # mongo will not start if this is true
     }
 
     class { 'mongodb::client': }
@@ -153,7 +155,6 @@ class st2::profile::mongodb (
           timeout => '240',
         }
 
-
         # ensure MongoDB config is present and service is running
         Class['mongodb::server::config']
         -> Class['mongodb::server::service']
@@ -231,5 +232,4 @@ class st2::profile::mongodb (
       require  => Class['mongodb::server'],
     }
   }
-
 }

@@ -5,13 +5,15 @@
 # @param db_username
 #    Username to connect to db with
 # @param db_password
-#    Password for 'admin' and 'stackstorm' users in MongDB. If 'undef' then use $cli_password
+#    Password for 'admin' and 'stackstorm' users in MongDB. If 'undef' then use
+#    $cli_password
 # @param db_port
 #    Port for db server for st2 to talk to
 # @param db_bind_ips
 #    Array of bind IP addresses for MongoDB to listen on
 # @param version
-#    Version of MongoDB to install. If not provided it will be auto-calcuated based on $st2::version.
+#    Version of MongoDB to install. If not provided it will be auto-calcuated based
+#    on $st2::version.
 # @param manage_repo
 #    Set this to +false+ when you have your own repositories for mongodb
 # @param auth
@@ -47,14 +49,11 @@ class st2::profile::mongodb (
   $facts['os']['release']['major'] == '20.04' and
   st2::version_ge('3.3.0') {
     $_mongodb_version_default = '4.4'
-  }
-  elsif st2::version_ge('3.3.0') {
+  } elsif st2::version_ge('3.3.0') {
     $_mongodb_version_default = '4.0'
-  }
-  elsif st2::version_ge('2.4.0') {
+  } elsif st2::version_ge('2.4.0') {
     $_mongodb_version_default = '3.4'
-  }
-  else {
+  } else {
     $_mongodb_version_default = '3.2'
   }
 
@@ -113,11 +112,13 @@ class st2::profile::mongodb (
           unless  => 'grep "^security.authorization: disabled" /etc/mongod.conf',
           path    => $_mongodb_exec_path,
         }
+
         exec { 'mongodb - disable auth':
           command     => 'sed -i \'s/security.authorization: enabled/security.authorization: disabled/g\' /etc/mongod.conf',
           refreshonly => true,
           path        => $_mongodb_exec_path,
         }
+
         facter::fact { 'mongodb_auth_init':
           value => bool2str(true),
         }
@@ -137,6 +138,7 @@ class st2::profile::mongodb (
           unless  => 'grep "^security.authorization: enabled" /etc/mongod.conf',
           path    => $_mongodb_exec_path,
         }
+
         exec { 'mongodb - restart service':
           command     => $_mongodb_restart_cmd,
           refreshonly => true,
@@ -149,6 +151,7 @@ class st2::profile::mongodb (
         } else {
           $_mongodb_bind_ip = $db_bind_ips[0]
         }
+
         mongodb_conn_validator { 'mongodb - wait for restart':
           server  => $_mongodb_bind_ip,
           port    => $db_port,
@@ -174,8 +177,7 @@ class st2::profile::mongodb (
         # create other databases
         -> Mongodb::Db <| title != 'admin' |>
       }
-    }
-    else {
+    } else {
       class { 'mongodb::server':
         port => $db_port,
       }

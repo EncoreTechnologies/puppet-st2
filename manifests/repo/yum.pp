@@ -1,4 +1,5 @@
 # Yum repo for StackStorm
+#
 class st2::repo::yum {
   if $st2::repo::ensure == 'present' {
     yumrepo { "StackStorm_${st2::repo::repository}":
@@ -11,8 +12,7 @@ class st2::repo::yum {
 
     Yumrepo["StackStorm_${st2::repo::repository}"]
     -> Package<| tag == 'st2::server::packages' |>
-  }
-  else {
+  } else {
     yumrepo { "StackStorm_${st2::repo::repository}":
       ensure => absent,
     }

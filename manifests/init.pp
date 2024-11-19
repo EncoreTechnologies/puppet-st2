@@ -60,6 +60,8 @@
 #   CLI config - API Version
 # @param cli_debug
 #   CLI config - Enable/Disable Debug
+# @param cli_cacert
+#   CLI config - Path to CA cert
 # @param cli_cache_token
 #   CLI config - True to cache auth token until expries
 # @param cli_username
@@ -159,9 +161,7 @@
 #   Configuration parameters for Hubot adapter (hash)
 # @param chatops_hubot_log_level
 #   Logging level for hubot (string)
-# @param chatops_hubot_express_port
-#   Port that hubot operates on (integer or string)
-# @param chatops_tls_cert_reject_unauthorized
+# @param chatops_cert_reject_unauth
 #   Should hubot validate SSL certs
 #   Set to 1 when using self signed certs
 # @param chatops_hubot_name
@@ -184,17 +184,6 @@
 #   API and Auth. If unspecified it will
 #   use the default in /opt/stackstorm/chatops/st2chatops.env
 #   (default: undef)
-# @param chatops_api_url
-#   ChatOps config - API URL
-# @param chatops_auth_url
-#   ChatOps config - Auth URL
-# @param chatops_web_url
-#   Public URL of StackStorm instance.
-#   used by chatops to offer links to
-#   execution details in a chat.
-#   If unspecified it will use the
-#   default in /opt/stackstorm/chatops/st2chatops.env
-#   (default: undef)
 # @param nodejs_version
 #   Version of NodeJS to install. If not provided it
 #   will be auto-calcuated based on $version
@@ -212,6 +201,8 @@
 #   The number of rulesengines to have in an active active state (default: 1)
 # @param notifier_num
 #   The number of notifiers to have in an active active state (default: 1)
+# @param notifier_services
+#   Array of service names to be managed with st2notifier.
 # @param erlang_url
 #   The url for the erlang repositiory to be used for rabbitmq
 # @param erlang_key
@@ -241,7 +232,8 @@
 # @param erlang_packages
 # @param erlang_rhel_gpgcheck
 # @param erlang_rhel_repo_gpgcheck
-# @param erlang_rhel_sslcacert_location
+# @param erlang_rhel_sslcacert
+#   Path to the CA cert for the erlang repo
 # @param erlang_rhel_sslverify
 # @param manage_datastore_key
 # @param manage_epel_repo
@@ -264,7 +256,24 @@
 # @param redis_password
 # @param redis_port
 # @param stream_port
-
+# @param st2_web_packages
+#   Array of packages to install for st2web
+# @param chatops_base_url
+#   URL of the StackStorm instance that chatops will connect to for API and Auth.
+# @param chatops_conf_dir
+#   Directory where chatops configuration files are stored
+# @param chatops_global_conf
+#   Path to the global chatops configuration file
+# @param chatops_services
+#   st2chatops service name
+# @param rulesengine_services
+#   Array of service names to be managed with st2rulesengine.
+# @param scheduler_services
+#   Array of service names to be managed with st2scheduler.
+# @param timersengine_services
+#   Array of service names to be managed with st2timerengine.
+# @param workflowengine_services
+#   Array of service names to be managed with st2workflowengine.
 #
 #
 # @example Basic Usage
@@ -306,7 +315,7 @@
 #     python_version            => $st2_python_version,
 #   }
 class st2 (
-  Stdlib::Hostname            $hostname                   = '127.0.0.1',
+  Stdlib::Host                $hostname                   = '127.0.0.1',
   Integer                     $actionrunner_workers       = 10,
   String[1]                   $admin_password             = undef,
   String[1]                   $admin_username             = 'admin',
@@ -315,27 +324,28 @@ class st2 (
   Hash                        $auth_backend_config        = $st2::params::auth_backend_config,
   String                      $auth_backend               = 'flat_file',
   Boolean                     $auth_debug                 = false,
-  String                      $auth_mode                  = 'standalone',
+  Enum['proxy', 'standalone'] $auth_mode                  = 'standalone',
   Stdlib::Port                $auth_port                  = 9100,
   Boolean                     $auth                       = true,
   Hash                        $chatops_adapter            = {},
   Hash                        $chatops_adapter_conf       = $st2::params::chatops_adapter_conf,
   Optional[String]            $chatops_api_key            = undef,
-  Stdlib::HTTPUrl             $chatops_api_url            = "https://${hostname}/api",
-  Stdlib::HTTPUrl             $chatops_auth_url           = "https://${hostname}/auth",
+  Stdlib::HTTPUrl             $chatops_base_url           = "https://${hostname}",
+  Stdlib::Absolutepath        $chatops_conf_dir           = '/opt/stackstorm/chatops',
+  Stdlib::Absolutepath        $chatops_global_conf        = $st2::params::st2_chatops_global_env_file,
   String                      $chatops_hubot_alias        = "'!'",
-  Stdlib::Port                $chatops_hubot_express_port = 8081,
   String                      $chatops_hubot_log_level    = 'debug',
-  String                      $chatops_hubot_name         = '"hubot"',
+  String                      $chatops_hubot_name         = 'hubot',
   Stdlib::Host                $chatops_st2_hostname       = $hostname,
-  Enum['0', '1']              $chatops_tls_cert_reject_unauthorized = '0',
-  Optional[Stdlib::HTTPUrl]   $chatops_web_url            = undef,
-  String                      $cli_apikey                 = undef,
+  String[1]                   $chatops_services           = 'st2chatops',
+  Enum['0','1']               $chatops_cert_reject_unauth = '0',
+  Optional[String]            $cli_apikey                 = undef,
   Stdlib::HTTPUrl             $cli_api_url                = "http://${hostname}:${api_port}",
-  Patern[/v[0-9]+/]           $cli_api_version            = 'v1',
+  Pattern[/v[0-9]+/]          $cli_api_version            = 'v1',
   Stdlib::HTTPUrl             $cli_auth_url               = "http://${hostname}:${auth_port}",
   Stdlib::HTTPUrl             $cli_base_url               = "http://${hostname}",
   Boolean                     $cli_cache_token            = true,
+  Stdlib::Absolutepath        $cli_cacert                 = '/etc/ssl/certs/ca-bundle.crt',
   Boolean                     $cli_debug                  = false,
   String[1]                   $cli_password               = $admin_password,
   Boolean                     $cli_silence_ssl_warnings   = false,
@@ -353,16 +363,16 @@ class st2 (
   Stdlib::Host                $db_host                    = $hostname,
   String[1]                   $db_name                    = 'st2',
   String[1]                   $db_password                = $admin_password,
-  Stdlib::Port                $db_port                    = '27017',
+  Stdlib::Port                $db_port                    = 27017,
   String[1]                   $db_username                = 'stackstorm',
   String                      $erlang_key                 = $st2::params::erlang_key,
   String                      $erlang_key_id              = $st2::params::erlang_key_id,
   String                      $erlang_key_source          = $st2::params::erlang_key_source,
   Array[String[1]]            $erlang_packages            = ['erlang'],
-  Enum[0, 1]                  $erlang_rhel_gpgcheck       = 0,
-  Enum[0, 1]                  $erlang_rhel_repo_gpgcheck  = 1,
-  Stdlib::Absolutepath        $erlang_rhel_sslcacert_location = $st2::params::erlang_rhel_sslcacert_location,
-  Enum[0, 1]                  $erlang_rhel_sslverify      = 1,
+  Integer                     $erlang_rhel_gpgcheck       = 0,
+  Integer                     $erlang_rhel_repo_gpgcheck  = 1,
+  Stdlib::Absolutepath        $erlang_rhel_sslcacert      = '/etc/pki/tls/certs/ca-bundle.crt',
+  Integer                     $erlang_rhel_sslverify      = 1,
   Stdlib::HTTPUrl             $erlang_url                 = $st2::params::erlang_url,
   Optional[Stdlib::HTTPUrl]   $index_url                  = undef,
   Boolean                     $manage_datastore_key       = false,
@@ -385,6 +395,7 @@ class st2 (
   Boolean                     $nodejs_manage_repo         = true,
   Optional[String]            $nodejs_version             = undef,
   Integer[1]                  $notifier_num               = 1,
+  Array[String[1]]            $notifier_services          = ['st2notifier'],
   Variant[String, Hash]       $packs                      = {},
   String[1]                   $packs_group                = 'st2packs',
   Boolean                     $python_use_epel_repo       = true,
@@ -398,19 +409,22 @@ class st2 (
   Stdlib::IP::Address         $redis_bind_ip              = '127.0.0.1',
   Stdlib::Host                $redis_hostname             = $hostname,
   Boolean                     $redis_manage_repo          = false,
-  String                      $redis_password             = undef,
+  Optional[String]            $redis_password             = undef,
   Stdlib::Port                $redis_port                 = 6379,
   St2::Repository             $repository                 = $st2::params::repository,
   Integer[1]                  $rulesengine_num            = 1,
+  Array[String[1]]            $rulesengine_services       = ['st2rulesengine'],
   Integer[1]                  $scheduler_gc_interval      = 10,
   Integer[1]                  $scheduler_num              = 1,
   Integer[1]                  $scheduler_pool_size        = 10,
+  Array[String[1]]            $scheduler_services         = ['st2scheduler'],
   Float                       $scheduler_sleep_interval   = 0.1,
   Stdlib::Absolutepath        $ssh_key_location           = '/home/stanley/.ssh/st2_stanley_key',
   String                      $ssl_cert                   = "${ssl_dir}/st2.crt",
   Boolean                     $ssl_cert_manage            = true,
   Stdlib::Absolutepath        $ssl_dir                    = '/etc/ssl/st2',
   String                      $ssl_key                    = "${ssl_dir}/st2.key",
+  Array[String]               $st2_web_packages           = ['st2web'],
   Stdlib::Port                $stream_port                = 9102,
   String[1]                   $syslog_facility            = 'local7',
   Boolean                     $syslog                     = false,
@@ -419,11 +433,13 @@ class st2 (
   Enum['tcp', 'udp']          $syslog_protocol            = 'udp',
   Boolean                     $timersengine_enabled       = true,
   String[1]                   $timersengine_timezone      = 'America/New_York',
+  Array[String[1]]            $timersengine_services      = ['st2timersengine'],
   Boolean                     $use_ssl                    = false,
   Boolean                     $validate_output_schema     = false,
   St2::Ensure                 $version                    = 'present',
   Stdlib::Absolutepath        $web_root                   = '/opt/stackstorm/static/webui',
   Integer[1]                  $workflowengine_num         = 1,
+  Array[String[1]]            $workflowengine_services    = ['st2workflowengine'],
 ) inherits st2::params {
   ########################################
   ## Control commands

@@ -12,7 +12,8 @@
 # @param db_name
 #    Database name in MongoDB (default: st2auth)
 # @param db_auth
-#    Enable authentication with MongoDB (required for MongoDB installs with auth enabled)
+#    Enable authentication with MongoDB (required for MongoDB installs with
+#    auth enabled)
 # @param db_username
 #    Username for MongoDB login (default: st2auth)
 # @param db_password
@@ -36,13 +37,13 @@
 #    db_name: "myauthdb"
 #
 class st2::auth::mongodb (
-  $conf_file   = $st2::conf_file,
-  $db_host     = $st2::db_host,
-  $db_port     = $st2::db_port,
-  $db_name     = 'st2auth',
-  $db_auth     = $st2::mongodb_auth,
-  $db_username = $st2::db_username,
-  $db_password = $st2::db_password,
+  Stdlib::Absolutepath   $conf_file    = $st2::conf_file,
+  Stdlib::Host           $db_host      = $st2::db_host,
+  Stdlib::Port           $db_port      = $st2::db_port,
+  String                 $db_name      = 'st2auth',
+  Boolean                $db_auth      = $st2::mongodb_auth,
+  String                 $db_username  = $st2::db_username,
+  String                 $db_password  = $st2::db_password,
 ) inherits st2 {
   include st2::auth::common
 
@@ -50,8 +51,7 @@ class st2::auth::mongodb (
     $_kwargs = "{\"db_host\": \"${db_host}\", \"db_port\": \"${db_port}\",\
       \"db_name\": \"${db_name}\", \"db_username\": \"${db_username}\", \
       \"db_password\": \"${db_password}\"}"
-  }
-  else {
+  } else {
     $_kwargs = "{\"db_host\": \"${db_host}\", \"db_port\": \"${db_port}\",\
       \"db_name\": \"${db_name}\"}"
   }
@@ -64,6 +64,7 @@ class st2::auth::mongodb (
     value   => 'mongodb',
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_backend_kwargs':
     ensure  => present,
     path    => $conf_file,

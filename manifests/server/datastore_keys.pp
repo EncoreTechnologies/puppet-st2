@@ -6,6 +6,19 @@
 #    The directory where the datastore keys will be stored
 # @param key_path
 #    Path to the key file
+# @param manage_datastore_key
+#    Whether to manage the key file or not
+# @param datastore_hmac_size
+#    Size of the HMAC key
+# @param datastore_hmac_key
+#    HMAC key
+# @param datastore_aes_key
+#    AES key
+# @param datastore_aes_mode
+#    AES mode
+# @param datastore_aes_size
+#    Size of the AES key
+#
 #
 # @example Basic Usage
 #   include st2::server::datastore_keys
@@ -17,15 +30,15 @@
 #   }
 #
 class st2::server::datastore_keys (
-  $conf_file            = $st2::conf_file,
-  $keys_dir             = $st2::datastore_keys_dir,
-  $key_path             = $st2::datastore_key_path,
-  $manage_datastore_key = $st2::manage_datastore_key,
-  $datastore_hmac_size  = $st2::datastore_hmac_size,
-  $datastore_hmac_key   = $st2::datastore_hmac_key,
-  $datastore_aes_key    = $st2::datastore_aes_key,
-  $datastore_aes_mode   = $st2::datastore_aes_mode,
-  $datastore_aes_size   = $st2::datastore_aes_size,
+  Stdlib::Absolutepath   $conf_file            = $st2::conf_file,
+  Stdlib::Absolutepath   $keys_dir             = $st2::datastore_keys_dir,
+  Stdlib::Absolutepath   $key_path             = $st2::datastore_key_path,
+  Boolean                $manage_datastore_key = $st2::manage_datastore_key,
+  Integer                $datastore_hmac_size  = $st2::datastore_hmac_size,
+  Optional[String]       $datastore_hmac_key   = $st2::datastore_hmac_key,
+  Optional[String]       $datastore_aes_key    = $st2::datastore_aes_key,
+  String                 $datastore_aes_mode   = $st2::datastore_aes_mode,
+  Integer                $datastore_aes_size   = $st2::datastore_aes_size,
 ) inherits st2 {
   ## Directory
   file { $keys_dir:
@@ -40,13 +53,15 @@ class st2::server::datastore_keys (
     file { $key_path:
       ensure  => file,
       path    => $key_path,
-      content => epp('st2/server/datastore_key.json.epp', {
-        datastore_hmac_key  => $datastore_hmac_key,
-        datastore_hmac_size => $datastore_hmac_size,
-        datastore_aes_mode  => $datastore_aes_mode,
-        datastore_aes_key   => $datastore_aes_key,
-        datastore_aes_size  => $datastore_aes_size,
-      }),
+      content => epp('st2/server/datastore_key.json.epp',
+        {
+          datastore_hmac_key  => $datastore_hmac_key,
+          datastore_hmac_size => $datastore_hmac_size,
+          datastore_aes_mode  => $datastore_aes_mode,
+          datastore_aes_key   => $datastore_aes_key,
+          datastore_aes_size  => $datastore_aes_size,
+        }
+      ),
       owner   => 'st2',
       group   => 'st2',
       mode    => '0600',
@@ -81,7 +96,6 @@ class st2::server::datastore_keys (
     value   => $key_path,
     tag     => 'st2::config',
   }
-
 
   if $manage_datastore_key {
     Package['st2']

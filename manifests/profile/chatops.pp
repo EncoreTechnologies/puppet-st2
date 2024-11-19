@@ -9,7 +9,7 @@
 #    Hubot log level
 # @param hubot_express_port
 #    Express port hubot listens to
-# @param tls_cert_reject_unauthorized
+# @param cert_reject_unauth
 #    Set to 1 when using self signed certs
 # @param hubot_name
 #    Name of the bot in chat. Should be properly quoted if it has special characters,
@@ -27,19 +27,22 @@
 # @param st2_hostname
 #    Hostname of the StackStorm instance that chatops will connect to for API and Auth.
 #    If unspecified it will use the default in <code>/opt/stackstorm/chatops/st2chatops.env</code>
-# @param web_url
-#    Public URL of StackStorm instance. Used by chatops to offer links to execution details in a chat.
-#    If unspecified it will use the default in <code>/opt/stackstorm/chatops/st2chatops.env</code>
-# @param api_url
-#    URL of the StackStorm API service
-# @param auth_url
-#    URL of the StackStorm Auth service
 # @param auth_username
 #    StackStorm auth Username for ChatOps to communicate back with StackStorm.
 #    Used if +api_key+ is not specified (optional)
 # @param auth_password
 #    StackStorm auth Password for ChatOps to communicate back with StackStorm.
 #    Used if +api_key+ is not specified (optional)
+# @param chatops_packages
+#    Array of packages to install for chatops
+# @param conf_dir
+#    Directory where chatops configuration files are stored
+# @param global_env_file
+#    Path to the global environment file
+# @param base_url
+#    URL of the StackStorm instance that chatops will connect to for API and Auth.
+# @param services
+#    Array of services to manage
 #
 # @example Basic Usage
 #   class { 'st2':
@@ -64,52 +67,74 @@
 #   }
 #
 class st2::profile::chatops (
-  $version                      = $st2::version,
-  $hubot_log_level              = $st2::chatops_hubot_log_level,
-  $hubot_express_port           = $st2::chatops_hubot_express_port,
-  $tls_cert_reject_unauthorized = $st2::chatops_tls_cert_reject_unauthorized,
-  $hubot_name                   = $st2::chatops_hubot_name,
-  $hubot_alias                  = $st2::chatops_hubot_alias,
-  $npm_packages                 = $st2::chatops_adapter,
-  $adapter_config               = $st2::chatops_adapter_conf,
-  $api_key                      = $st2::chatops_api_key,
-  $st2_hostname                 = $st2::chatops_st2_hostname,
-  $web_url                      = $st2::chatops_web_url,
-  $api_url                      = $st2::chatops_api_url,
-  $auth_url                     = $st2::chatops_auth_url,
-  $auth_username                = $st2::cli_username,
-  $auth_password                = $st2::cli_password,
+  Hash                     $adapter_config       = $st2::chatops_adapter_conf,
+  Optional[String]         $api_key              = $st2::chatops_api_key,
+  String                   $auth_password        = $st2::cli_password,
+  String                   $auth_username        = $st2::cli_username,
+  Stdlib::HTTPUrl          $base_url             = $st2::chatops_base_url,
+  Array[String[1]]         $chatops_packages     = ['st2chatops'],
+  Stdlib::Absolutepath     $conf_dir             = $st2::chatops_conf_dir,
+  Stdlib::Absolutepath     $global_env_file      = $st2::chatops_global_conf,
+  String                   $hubot_alias          = $st2::chatops_hubot_alias,
+  Stdlib::Port             $hubot_express_port   = 8081,
+  String                   $hubot_log_level      = $st2::chatops_hubot_log_level,
+  String                   $hubot_name           = $st2::chatops_hubot_name,
+  Hash                     $npm_packages         = $st2::chatops_adapter,
+  Array[String[1]]         $services             = ['st2chatops'],
+  Stdlib::Host             $st2_hostname         = $st2::chatops_st2_hostname,
+  Enum['0','1']            $cert_reject_unauth   = $st2::chatops_cert_reject_unauth,
+  St2::Ensure              $version              = $st2::version,
 ) inherits st2 {
-  include 'st2::params'
-
-  $_chatops_packages = $st2::params::st2_chatops_packages
-  $_chatops_dir = $st2::params::st2_chatops_dir
-  $_chatops_env_file = "${_chatops_dir}/st2chatops.env"
+  #
+  ## Local variables
+  $_chatops_env_file = "${conf_dir}/st2chatops.env"
 
   ########################################
   ## Packages
-  package { $_chatops_packages:
-    ensure => $version,
-    tag    => ['st2::packages', 'st2::chatops::packages'],
-  }
+  ensure_packages([$chatops_packages],
+    {
+      'ensure' => $version,
+      'tag'    => ['st2::packages', 'st2::chatops::packages'],
+    }
+  )
 
   ########################################
   ## Config
+  file { $global_env_file:
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    content => epp('st2/etc/sysconfig/st2chatops.epp',
+      {
+        st2_hostname  => $st2_hostname,
+        api_url       => "${base_url}/api",
+        auth_url      => "${base_url}/auth",
+        api_key       => $api_key,
+        auth_username => $auth_username,
+        auth_password => $auth_password,
+        web_url       => "${base_url}/",
+      }
+    ),
+    tag     => 'st2::chatops::config',
+  }
+
   file { $_chatops_env_file:
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => template('st2/opt/stackstorm/chatops/st2chatops.env.erb'),
-    tag     => 'st2::chatops::config',
-  }
-
-  file { $st2::params::st2_chatops_global_env_file:
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    content => template('st2/etc/sysconfig/st2chatops.erb'),
+    content => epp('st2/opt/stackstorm/chatops/st2chatops.env.epp',
+      {
+        adapter_config     => $adapter_config,
+        cert_reject_unauth => $cert_reject_unauth,
+        hubot_alias        => $hubot_alias,
+        hubot_express_port => $hubot_express_port,
+        hubot_log_level    => $hubot_log_level,
+        hubot_name         => $hubot_name,
+        st2_hostname       => $st2_hostname,
+      }
+    ),
     tag     => 'st2::chatops::config',
   }
 
@@ -119,7 +144,7 @@ class st2::profile::chatops (
 
   $npm_package_defaults = {
     ensure  => present,
-    target  => $_chatops_dir,
+    target  => $conf_dir,
     require => Class['St2::Profile::Nodejs'],
     tag     => 'st2::chatops::npm_package',
   }
@@ -128,7 +153,7 @@ class st2::profile::chatops (
 
   ########################################
   ## Services
-  service { $st2::params::st2_chatops_services:
+  service { $services:
     ensure => 'running',
     enable => true,
     tag    => 'st2::chatops::service',

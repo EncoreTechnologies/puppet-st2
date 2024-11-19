@@ -5,7 +5,7 @@
 # @param service_num
 #    The number of servicees that should be scaled out
 # @param existing_services
-#    The service to make sure are enabled and running. All new service
+#    The services to make sure are enabled and running. All new service
 #    are automatically added to this.
 #
 # @example build st2workflowengine service
@@ -15,11 +15,12 @@
 #    existing_services => ['st2workflowengine'],
 #  }
 #
-define st2::service(
-  $service_name,
-  $service_num,
-  $existing_services,
+define st2::service (
+  String             $service_name,
+  Integer            $service_num,
+  Array[String[1]]   $existing_services,
 ) {
+  #
   if ($service_num > 1) {
     $additional_service = range('2', $service_num).reduce([]) |$memo, $number| {
       $new_service_name = "${service_name}${number}"
@@ -47,7 +48,6 @@ define st2::service(
     }
 
     $_existing_services = $existing_services + $additional_service
-
   } else {
     $_existing_services = $existing_services
   }

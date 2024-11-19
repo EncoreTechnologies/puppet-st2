@@ -8,22 +8,24 @@
 #     repository => 'unstable',
 #   }
 #
-# @param [Enum['present', 'absent']] ensure
-#   The basic state the repo should be in
-#
-# @param [St2::Repository] repository
+# @param ensure
+#   The basic state the repo should be in (present or absent)
+# @param repository
 #   Release repository to enable
+# @param manage_epel_repo
+#   Whether to manage the EPEL repository (default: true)
 #
 class st2::repo (
-  Enum['present', 'absent'] $ensure = 'present',
-  St2::Repository $repository = $st2::repository,
-  Boolean $manage_epel_repo = $st2::manage_epel_repo,
+  Enum['present', 'absent']  $ensure            = 'present',
+  St2::Repository            $repository        = $st2::repository,
+  Boolean                    $manage_epel_repo  = $st2::manage_epel_repo,
 ) inherits st2 {
+  #
   case $facts['os']['family'] {
     'RedHat': {
       # RedHat distros need EPEL, $manage_epel_repo can be set to false if not needed
       if $manage_epel_repo {
-        require epel
+        include epel
       }
 
       $dist_version = $facts['os']['release']['major']

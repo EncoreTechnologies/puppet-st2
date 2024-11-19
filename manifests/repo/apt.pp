@@ -1,4 +1,5 @@
 # Apt repo for StackStorm
+#
 class st2::repo::apt {
   if $st2::repo::ensure == 'present' {
     apt::source { "StackStorm_${st2::repo::repository}":
@@ -13,8 +14,7 @@ class st2::repo::apt {
 
     Apt::Source["StackStorm_${st2::repo::repository}"]
     -> Package<| tag == 'st2::server::packages' |>
-  }
-  else {
+  } else {
     apt::source { "StackStorm_${st2::repo::repository}":
       ensure => absent,
     }

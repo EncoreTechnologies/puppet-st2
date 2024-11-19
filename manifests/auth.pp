@@ -24,6 +24,8 @@
 #    Authentication mode, either 'standalone' or 'proxy' (default: standalone)
 # @param use_ssl
 #    Enable SSL (default: false)
+# @param ssl_dir
+#    Path to SSL directory (default: '/etc/ssl/st2')
 # @param ssl_cert
 #    Path to SSL Certificate file (default: '/etc/ssl/st2/st2.crt')
 # @param ssl_key
@@ -57,15 +59,16 @@
 #  }
 #
 class st2::auth (
-  $backend        = $st2::auth_backend,
-  $backend_config = $st2::auth_backend_config,
-  $debug          = $st2::auth_debug,
-  $mode           = $st2::auth_mode,
-  $use_ssl        = $st2::use_ssl,
-  $ssl_cert       = $st2::ssl_cert,
-  $ssl_key        = $st2::ssl_key,
+  String                $backend        = $st2::auth_backend,
+  Hash                  $backend_config = $st2::auth_backend_config,
+  Boolean               $debug          = $st2::auth_debug,
+  String                $mode           = $st2::auth_mode,
+  Boolean               $use_ssl        = $st2::use_ssl,
+  Stdlib::Absolutepath  $ssl_dir        = $st2::ssl_dir,
+  Stdlib::Absolutepath  $ssl_cert       = "${ssl_dir}/st2.crt",
+  Stdlib::Absolutepath  $ssl_key        = "${ssl_dir}/st2.key",
 ) inherits st2 {
-
+  #
   if !defined(Class['st2::auth::common']) {
     class { 'st2::auth::common':
       debug    => $debug,
@@ -85,12 +88,16 @@ class st2::auth (
     'pam'       => 'st2::auth::pam',
     default     => undef,
   }
+
   if $_backend_class == undef {
     fail("[st2::auth] Unknown backend: ${backend}")
   }
+
   if !defined(Class[$_backend_class]) {
-    create_resources('class', {
-      "${_backend_class}" => $backend_config,
-    })
+    create_resources('class',
+      {
+        "${_backend_class}" => $backend_config,
+      }
+    )
   }
 }

@@ -16,50 +16,55 @@
 #
 # @param [TargetSpec] targets
 #   Set of targets (MongoDB hosts) that this plan will be executed on.
-#
 # @param [String] mongo_admin_db
 #   Name of the admin database for MongoDB
-#
 # @param [String] mongo_username
 #   Name of the admin user on the admin database
-#
 # @param [String] mongo_password
 #   Password of the admin user on the admin database
-#
 # @param [Array[String]] mongo_packages
 #   List of MongoDB packages that will be upgraded
-#
 # @param [Enum['enterprise', 'org']] mongo_edition
 #   What edition of MongoDB should be setup from a repo perspective,
 #   either 'org' for community edition, or 'enterprise' for enterprise edition.
-#
 # @param [String] upgrade_version_start
-#   Version of MongoDB that the database is currently on, ie. where we are starting from.
-#
+#   Version of MongoDB that the database is currently on, ie. where we are
+#   starting from.
 # @param [Array[String]] upgrade_version_path
 #   List of versions that we will upgrade through along our path to success!
 #
+#
 # @example Basic usage
-#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params '{"mongo_password": "xxx"}'
+#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params
+#   '{"mongo_password": "xxx"}'
 #
 # @example Upgrading enterprise packages
-#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params '{"mongo_password": "xxx", "mongo_packages": ["mongodb-enterprise-server", "mongodb-enterprise-shell", "mongodb-enterprise-tools"], "mongo_edition": "enterprise"}'
+#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params 
+#   '{"mongo_password": "xxx", "mongo_packages": ["mongodb-enterprise-server",
+#   "mongodb-enterprise-shell", "mongodb-enterprise-tools"], "mongo_edition":
+#   "enterprise"}'
 #
 # @example Upgrading from 3.6 to 4.0
-#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params '{"mongo_password": "xxx", "upgrade_version_start": "3.6", "upgrade_version_path": ["4.0"]}'
+#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params 
+#   '{"mongo_password": "xxx", "upgrade_version_start": "3.6", 
+#   "upgrade_version_path": ["4.0"]}'
 #
 # @example Upgrading from 3.4 to 3.6 to 4.0
-#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params '{"mongo_password": "xxx", "upgrade_version_start": "3.4", "upgrade_version_path": ["3.6", "4.0"]}'
+#   bolt plan run st2::upgrade_mongodb --targets ssh_nodes --params 
+#   '{"mongo_password": "xxx", "upgrade_version_start": "3.4", 
+#   "upgrade_version_path": ["3.6", "4.0"]}'
 #
 plan st2::upgrade_mongodb (
-  String $mongo_admin_db = 'admin',
-  String $mongo_username = 'admin',
-  String $mongo_password,
-  Array[String] $mongo_packages  = ['mongodb-org-server', 'mongodb-org-shell', 'mongodb-org-tools'],
-  Enum['enterprise', 'org'] $mongo_edition = 'org',
-  String $upgrade_version_start = '3.4',
-  Array[String] $upgrade_version_path = ['3.6', '4.0'],
-  TargetSpec $targets,
+  String                     $mongo_admin_db        = 'admin',
+  String                     $mongo_username        = 'admin',
+  String                     $mongo_password,
+  Array[String]              $mongo_packages        = [
+    'mongodb-org-server', 'mongodb-org-shell', 'mongodb-org-tools',
+  ],
+  Enum['enterprise', 'org']  $mongo_edition         = 'org',
+  String                     $upgrade_version_start = '3.4',
+  Array[String]              $upgrade_version_path  = ['3.6', '4.0'],
+  TargetSpec                 $targets,
 ) {
   # stop stackstorm
   run_command('st2ctl stop', $targets)
@@ -68,9 +73,9 @@ plan st2::upgrade_mongodb (
 
   # set MongoDB feature compatibility to 3.4
   $start_ver = $upgrade_version_start
-  run_command("${mongo_cmd} --eval \"db.adminCommand( { setFeatureCompatibilityVersion: '${start_ver}' } )\"",
-              $targets,
-              "Mongodb - Set Feature Compatibility Version ${start_ver}")
+  run_command("${mongo_cmd} --eval \"db.adminCommand( {
+  setFeatureCompatibilityVersion: '${start_ver}' } )\"",
+  $targets, "Mongodb - Set Feature Compatibility Version ${start_ver}")
 
   # gather facts on the targets so that we can determine RHEL/CentOS vs Ubuntu
   run_plan('facts', $targets)
@@ -101,12 +106,12 @@ plan st2::upgrade_mongodb (
           refreshonly => true,
           notify      => Exec['yum_makecache_fast'],
         }
+
         exec { 'yum_makecache_fast':
           command     => '/usr/bin/yum makecache fast',
           refreshonly => true,
         }
-      }
-      else {
+      } else {
         $location = $facts['os']['name'] ? {
           'Debian' => "https://${repo_domain}/apt/debian",
           'Ubuntu' => "https://${repo_domain}/apt/ubuntu",
@@ -116,7 +121,7 @@ plan st2::upgrade_mongodb (
         $repos       = $facts['os']['name'] ? {
           'Debian' => 'main',
           'Ubuntu' => 'multiverse',
-          default => undef
+          default  => undef
         }
         $key = $ver ? {
           '4.4'   => '20691EEC35216C63CAF66CE1656408E390CFB1F5',
@@ -146,6 +151,7 @@ plan st2::upgrade_mongodb (
           refreshonly => true,
           notify      => Exec['apt-get-update'],
         }
+
         exec { 'apt-get-update':
           command     => '/usr/bin/apt-get -y update',
           refreshonly => true,
@@ -153,18 +159,19 @@ plan st2::upgrade_mongodb (
       }
     }
 
-
     # Upgrade packages
     $mongo_packages.each |$package| {
       run_task('package::linux', $targets,
-                name => $package,
-                action => 'upgrade')
+        name   => $package,
+        action => 'upgrade'
+      )
     }
 
     # Set compatibility level to this version
     run_command("${mongo_cmd} --eval \"db.adminCommand( { setFeatureCompatibilityVersion: '${ver}' } )\"",
-                $targets,
-                "Mongodb - Set Feature Compatibility Version ${ver}")
+      $targets,
+      "Mongodb - Set Feature Compatibility Version ${ver}"
+    )
   }
 
   # start stackstorm

@@ -1,0 +1,6 @@
+<% |
+  $name,
+| -%>
+# /etc/sudoers.d/<%= $name %> : Managed by puppet.
+Defaults: <%= $name %> !requiretty
+<%= $name %> ALL=(ALL) NOPASSWD: SETENV: ALL

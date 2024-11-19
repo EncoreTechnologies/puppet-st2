@@ -19,10 +19,11 @@
 #    Should be set to false using ldaps in the uri. (default: 389)
 # @param bind_dn
 #    DN user to bind to LDAP. If an empty string, an anonymous bind is performed.
-#    To use the user supplied username in the bind_dn, use the <code>{username}</code> placeholder
-#    in string.
+#    To use the user supplied username in the bind_dn, use the
+#    <code>{username}</code> placeholder in string.
 # @param bind_pw
-#    DN password. Use the <code>{password}</code> placeholder in the string to use the user supplied password.
+#    DN password. Use the <code>{password}</code> placeholder in the string to use
+#    the user supplied password.
 # @param base_dn
 #    Base DN to search for all users/groups entries.
 # @param group_dns
@@ -71,26 +72,27 @@
 #    account_pattern: "userPrincipalName={username}"
 #
 class st2::auth::ldap (
-  $conf_file       = $st2::conf_file,
-  $host            = '',
-  $use_tls         = false,
-  $use_ssl         = false,
-  $port            = 389,
-  $bind_dn         = '',
-  $bind_pw         = '',
-  $base_dn         = '',
-  $group_dns       = undef,
-  $chase_referrals = true,
-  $scope           = 'subtree',
-  $id_attr         = 'uid',
-  $account_pattern = undef,
-  $group_pattern   = undef,
+  Stdlib::Absolutepath            $conf_file        = $st2::conf_file,
+  Stdlib::HTTPUrl                 $host             = '',
+  Boolean                         $use_tls          = false,
+  Boolean                         $use_ssl          = false,
+  Integer                         $port             = 389,
+  String                          $bind_dn          = undef,
+  String                          $bind_pw          = undef,
+  String                          $base_dn          = undef,
+  Variant[Array[String], String]  $group_dns        = undef,
+  Boolean                         $chase_referrals  = true,
+  String                          $scope            = 'subtree',
+  String                          $id_attr          = 'uid',
+  Optional[String]                $account_pattern  = undef,
+  Optional[String]                $group_pattern    = undef,
 ) inherits st2 {
   include st2::auth::common
 
   $_use_tls = bool2str($use_tls)
   $_use_ssl = bool2str($use_ssl)
   $_chase_refs = bool2str($chase_referrals)
+
   if $account_pattern != undef and $group_pattern != undef {
     $_kwargs = @("LDAPARGS"/L)
       {"host": "${host}", "use_tls": ${_use_tls},\
@@ -100,8 +102,7 @@ class st2::auth::ldap (
       "scope": "${scope}", "id_attr": "${id_attr}",\
       "account_pattern": "${account_pattern}", "group_pattern": "${group_pattern}"}
       | - LDAPARGS
-  }
-  elsif $account_pattern != undef {
+  } elsif $account_pattern != undef {
     $_kwargs = @("LDAPARGS"/L)
       {"host": "${host}", "use_tls": ${_use_tls},\
       "bind_dn": "${bind_dn}", "bind_password": "${bind_pw}",\
@@ -110,8 +111,7 @@ class st2::auth::ldap (
       "scope": "${scope}", "id_attr": "${id_attr}",\
       "account_pattern": "${account_pattern}"}
       | - LDAPARGS
-  }
-  elsif $group_pattern != undef {
+  } elsif $group_pattern != undef {
     $_kwargs = @("LDAPARGS"/L)
       {"host": "${host}", "use_tls": ${_use_tls},\
       "bind_dn": "${bind_dn}", "bind_password": "${bind_pw}",\
@@ -120,8 +120,7 @@ class st2::auth::ldap (
       "scope": "${scope}", "id_attr": "${id_attr}",\
       "group_pattern": "${group_pattern}"}
       | - LDAPARGS
-  }
-  else {
+  } else {
     $_kwargs = @("LDAPARGS"/L)
       {"host": "${host}", "use_tls": ${_use_tls},\
       "bind_dn": "${bind_dn}", "bind_password": "${bind_pw}",\
@@ -140,6 +139,7 @@ class st2::auth::ldap (
     value   => 'ldap',
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_backend_kwargs':
     ensure  => present,
     path    => $conf_file,
@@ -155,10 +155,7 @@ class st2::auth::ldap (
     'RedHat' => ['gcc', 'openldap-devel'],
     default  => undef,
   }
-  ensure_packages($_dep_pkgs,
-                  {
-                    'ensure' => 'present',
-                  })
+  ensure_packages($_dep_pkgs, { 'ensure' => 'present' })
 
   # dependencies
   Package<| tag == 'st2::server::packages' |>

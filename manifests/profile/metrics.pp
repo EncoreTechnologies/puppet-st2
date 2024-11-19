@@ -22,11 +22,12 @@
 #   include st2::profile::metrics
 #
 class st2::profile::metrics (
-  $metrics_include = $st2::metrics_include,
-  $metric_driver   = $st2::metric_driver,
-  $metric_host     = $st2::metric_host,
-  $metric_port     = $st2::metric_port,
+  Boolean        $metrics_include  = $st2::metrics_include,
+  String         $metric_driver    = $st2::metric_driver,
+  Stdlib::Host   $metric_host      = $st2::metric_host,
+  Stdlib::Port   $metric_port      = $st2::metric_port,
 ) inherits st2 {
+  #
   if $metrics_include {
     ini_setting { 'metrics_driver':
       path    => '/etc/st2/st2.conf',

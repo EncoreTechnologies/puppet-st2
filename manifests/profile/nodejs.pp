@@ -18,8 +18,8 @@
 #   Version of NodeJS to install. If not provided it will be auto-calcuated based on $st2::version
 #
 class st2::profile::nodejs (
-  Boolean           $manage_repo = $st2::nodejs_manage_repo,
-  Optional[String]  $version     = $st2::nodejs_version,
+  Boolean           $manage_repo  = $st2::nodejs_manage_repo,
+  Optional[String]  $version      = $st2::nodejs_version,
 ) inherits st2 {
   $use_rhel7_builtin = false
 
@@ -29,15 +29,12 @@ class st2::profile::nodejs (
   # else use NodeJS 4.x
   if st2::version_ge('3.5.0') {
     $nodejs_version_default = '14.x'
-  }
-  elsif st2::version_ge('2.10.0') {
+  } elsif st2::version_ge('2.10.0') {
     $nodejs_version_default = '10.x'
-  }
-  elsif st2::version_ge('2.4.0') {
+  } elsif st2::version_ge('2.4.0') {
     $nodejs_version_default = '6.x'
     $use_rhel7_builtin = true
-  }
-  else {
+  } else {
     $nodejs_version_default = '4.x'
     $use_rhel7_builtin = true
   }
@@ -57,8 +54,7 @@ class st2::profile::nodejs (
         manage_package_repo => false,
         npm_package_ensure  => 'present',
       }
-    }
-    else {
+    } else {
       class { 'nodejs':
         repo_url_suffix     => $nodejs_version,
         manage_package_repo => $manage_repo,
@@ -76,8 +72,7 @@ class st2::profile::nodejs (
         provider          => 'rpm',
       }
     }
-  }
-  else {
+  } else {
     # install nodejs from nodesource repo
     class { 'nodejs':
       repo_url_suffix     => $nodejs_version,

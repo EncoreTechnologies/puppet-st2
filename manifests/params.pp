@@ -1,13 +1,8 @@
 # @summary Main parameters to manage the st2 module
 #
-# @param packs_group_name
-#   The name of the group created to hold the st2 admin user
-# @param hostname
-#   Hostname of the StackStorm box. This is used as the default to drive a lot of
-#   other parameters in the st2 class such as auth URL, MongoDB host, RabbitMQ host, etc.
-# @param admin_username
+# param admin_username
 #   Username of the StackStorm admin user. Best practice is to change this to a unique username.
-# @param admin_password
+# param admin_password
 #   Password of the StackStorm admin user. Best practice is to change this to a unique password.
 #
 # @example Best Practice
@@ -18,28 +13,11 @@
 #   include st2::profile::fullinstall
 #
 class st2::params {
-  $hostname         = '127.0.0.1'
-  ## StackStorm default credentials (change these!)
-  $admin_username   = 'st2admin'
-  $admin_password   = 'Ch@ngeMe'
-
-  # SSL settings
-  $use_ssl  = false
-  $ssl_dir  = '/etc/ssl/st2'
-  $ssl_cert = '/etc/ssl/st2/st2.crt'
-  $ssl_key  = '/etc/ssl/st2/st2.key'
-
   # Auth settings
-  $auth_mode = standalone
-  $auth_backend = flat_file
   $auth_htpasswd_file = '/etc/st2/htpasswd'
   $auth_backend_config = {
     htpasswd_file => $auth_htpasswd_file,
   }
-  $auth_port = 9100
-
-  # API settings
-  $api_port = 9101
 
   # stream settings
   $stream_port = 9102
@@ -53,23 +31,10 @@ class st2::params {
   $conf_dir = '/etc/st2'
   $datstore_keys_dir = "${conf_dir}/keys"
 
-  # Datastore
-  $manage_datastore_key = false
-  $datastore_aes_key = ''
-  $datastore_hmac_key = ''
-  $datastore_hmac_size = 256
-  $datastore_aes_mode = 'CBC'
-  $datastore_aes_size = 256
-
   $st2_server_packages = [
     'st2',
   ]
-  $st2_chatops_packages = [
-    'st2chatops',
-  ]
-  $st2_web_packages = [
-    'st2web',
-  ]
+
   case $facts['os']['family'] {
     'Debian': {
       $st2_client_packages = [
@@ -101,47 +66,7 @@ class st2::params {
     'st2stream',
   ]
 
-  ## StackStorm Workflow Engine (Orchestra)
-  $rulesengine_services = [
-    'st2rulesengine',
-  ]
-
-  ## StackStorm Workflow Engine (Orchestra)
-  $notifier_services = [
-    'st2notifier',
-  ]
-
-  ## StackStorm ChatOps services
-  $st2_chatops_services = [
-    'st2chatops',
-  ]
-
-  ## StackStorm Workflow Engine (Orchestra)
-  $workflowengine_services = [
-    'st2workflowengine',
-  ]
-
-  ## StackStorm Timers Engine
-  $timersengine_services = [
-    'st2timersengine',
-  ]
-  $timersengine_enabled = true
-  $timersengine_timezone = 'America/Los_Angeles'
-
-  ## StackStorm Scheduler
-  $scheduler_services = [
-    'st2scheduler',
-  ]
-  $scheduler_sleep_interval = 0.1
-  $scheduler_gc_interval = 10
-  $scheduler_pool_size = 10
-
   ## nginx
-  $nginx_ssl_port = 443
-  $nginx_ssl_protocols = [
-    'TLSv1.2',
-    'TLSv1.3',
-  ]
   $nginx_ssl_ciphers = [
     # TLSv1.3
     'TLS_AES_128_GCM_SHA256',
@@ -159,26 +84,6 @@ class st2::params {
     'ECDHE-RSA-AES256-SHA384',
     'ECDHE-RSA-CHACHA20-POLY1305',
   ]
-  # no max on the body size for large workflow support
-  $nginx_client_max_body_size = '0'
-
-  # Number of workflow engines to run
-  $workflowengine_num = 1
-
-  # Number of schedulers to run
-  $scheduler_num = 1
-
-  # Number of rules engines to run
-  $rulesengine_num = 1
-
-  # Number of notifiers to run
-  $notifier_num = 1
-
-  # Should the output schema of actions and workflows be validated
-  $validate_output_schema = false
-
-  # st2web
-  $web_root = '/opt/stackstorm/static/webui/'
 
   ## MongoDB Data
   $mongodb_admin_username = 'admin'
@@ -191,12 +96,6 @@ class st2::params {
   $mongodb_st2_roles = ['readWrite']
 
   ## RabbitMQ
-  $rabbitmq_username = $admin_username
-  $rabbitmq_password = $admin_password
-  $rabbitmq_hostname = '127.0.0.1'
-  $rabbitmq_port = 5672
-  $rabbitmq_bind_ip = '127.0.0.1'
-  $rabbitmq_vhost = '/'
   $osname = downcase($facts['os']['name'])
   $rabbitmq_signing_key = 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc'
   $rabbitmq_key = 'https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey'
@@ -208,19 +107,6 @@ class st2::params {
   $erlang_key_id = 'B279943D2A549531E144B875F77F1EDA57EBB1CC'
   $erlang_key_source = 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xf77f1eda57ebb1cc'
   $erlang_rhel_sslcacert_location = '/etc/pki/tls/certs/ca-bundle.crt'
-  $erlang_rhel_sslverify = 1
-  $erlang_rhel_gpgcheck = 0
-  $erlang_rhel_repo_gpgcheck = 1
-  $erlang_packages = [
-    'erlang',
-  ]
-
-  ## Redis
-  $redis_bind_ip = '127.0.0.1'
-  $redis_hostname = '127.0.0.1'
-  $redis_port = 6379
-  $redis_password = ''
-
 
   ## actionrunner config
   $actionrunner_workers = 10
@@ -236,18 +122,7 @@ class st2::params {
     'RedHat' => '/etc/sysconfig/st2chatops',
   }
 
-  $hubot_log_level = 'debug'
-  $hubot_express_port = '8081'
-  $tls_cert_reject_unauthorized = '0'
-  $hubot_name = '"hubot"'
-  $hubot_alias = "'!'"
-  $chatops_adapter = {}
   $chatops_adapter_conf = {
     'HUBOT_ADAPTER' => 'slack',
   }
-
-  $metrics_include = false
-  $metric_driver = 'statsd'
-  $metric_host = '127.0.0.1'
-  $metric_port = '8125'
 }

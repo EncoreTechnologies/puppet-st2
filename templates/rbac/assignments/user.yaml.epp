@@ -1,0 +1,15 @@
+<% |
+  $user,
+  $description,
+  $roles,
+  $enabled_state = true,
+| -%>
+---
+    username: "<%= $user %>"
+    description: "<%= $description %>"
+    enabled: <%= $enabled_state %>
+    roles:
+<% $roles.each -%>
+<% |$role| { -%>
+    - "<%= $role %>"
+<%- } -%>

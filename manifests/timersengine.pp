@@ -20,15 +20,17 @@
 #   Specify to enable timer service.
 # @param timezone
 #   Timezone pertaining to the location where st2 is run.
+# @param timersengine_services
+#   Name of all the timersengine services.
 #
 class st2::timersengine (
-  $enabled  = $st2::timersengine_enabled,
-  $timezone = $st2::timersengine_timezone,
+  Boolean           $enabled                = $st2::timersengine_enabled,
+  String[1]         $timezone               = $st2::timersengine_timezone,
+  Array[String[1]]  $timersengine_services  = $st2::timersengine_services,
 ) inherits st2 {
-
+  #
   # st2timersengine was introduced in 2.9.0
   if st2::version_ge('2.9.0') {
-
     $_logger_config = $st2::syslog ? {
       true    => 'syslog',
       default => 'logging',
@@ -69,7 +71,7 @@ class st2::timersengine (
 
     ########################################
     ## Services
-    service { $st2::params::timersengine_services:
+    service { $timersengine_services:
       ensure => 'running',
       enable => true,
       tag    => 'st2::service',

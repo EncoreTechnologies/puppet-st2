@@ -54,7 +54,7 @@ define st2::user (
       {
         'priority' => 10,
         # note: passes in $name variable into template
-        'content'  => template('st2/etc/sudoers.d/user.erb'),
+        'content'  => epp('st2/etc/sudoers.d/user.epp', { name => $name, })
       }
     )
   }
@@ -168,7 +168,12 @@ define st2::user (
       }
     }
     else {
-      notify { "St2::User[${name}]: ${st2::notices::user_missing_client_keys}": }
+      $missing_client_keys = @("EOF"/L)
+        ssh_public_key and ssh_key_type need to be supplied for this resource.
+        Help can be found in INSTALL.md if needed
+        |-EOF
+
+      notify { "St2::User[${name}]: ${missing_client_keys}": }
     }
   }
   ### END Setup SSH Keys ###

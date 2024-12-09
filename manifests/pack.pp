@@ -22,9 +22,9 @@
 define st2::pack (
   Enum['present', 'absent']   $ensure   = present,
   String                      $pack     = $name,
-  Stdlib::HTTPUrl             $repo_url = undef,
-  Hash                        $config   = undef,
-  String                      $version  = undef,
+  Optional[Stdlib::HTTPUrl]   $repo_url = undef,
+  Optional[Hash]              $config   = undef,
+  Optional[String]            $version  = undef,
 ) {
   include st2
   $_cli_username = $st2::cli_username

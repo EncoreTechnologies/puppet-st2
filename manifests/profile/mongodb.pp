@@ -18,6 +18,8 @@
 #    Set this to +false+ when you have your own repositories for mongodb
 # @param auth
 #    Boolean determining if auth should be enabled for MongoDB.
+# @param service_name
+#    Name of the MongoDB service, defaults to 'mongod'
 #
 # @example Basic Usage
 #   include st2::profile::mongodb
@@ -32,14 +34,15 @@
 #   include st2::profile::mongodb
 #
 class st2::profile::mongodb (
-  String                $db_name      = $st2::db_name,
-  String                $db_username  = $st2::db_username,
-  String                $db_password  = $st2::db_password,
-  Stdlib::Port          $db_port      = $st2::db_port,
-  Stdlib::IP::Address   $db_bind_ips  = $st2::db_bind_ips,
-  Optional[String]      $version      = $st2::mongodb_version,
-  Boolean               $manage_repo  = $st2::mongodb_manage_repo,
-  Boolean               $auth         = $st2::mongodb_auth,
+  String                       $db_name      = $st2::db_name,
+  String                       $db_username  = $st2::db_username,
+  String                       $db_password  = $st2::db_password,
+  Stdlib::Port                 $db_port      = $st2::db_port,
+  Array[Stdlib::IP::Address]   $db_bind_ips  = $st2::db_bind_ips,
+  Optional[String]             $version      = $st2::mongodb_version,
+  Boolean                      $manage_repo  = $st2::mongodb_manage_repo,
+  Boolean                      $auth         = $st2::mongodb_auth,
+  String                       $service_name = $st2::mongodb_service_name,
 ) inherits st2 {
   # if Ubuntu is 20.04 then MongoDB 4.4
   # if the StackStorm version is > 3.3.0 then MongoDB 4.0
@@ -100,10 +103,9 @@ class st2::profile::mongodb (
       if !$facts['mongodb_auth_init'] {
         # unfortinately there is no way to synchronously force a service restart
         # in Puppet, so we have to revert to exec... sorry
-        include mongodb::params
-        $_mongodb_stop_cmd = "systemctl stop ${mongodb::params::service_name}"
-        $_mongodb_start_cmd = "systemctl start ${mongodb::params::service_name}"
-        $_mongodb_restart_cmd = "systemctl restart ${mongodb::params::service_name}"
+        $_mongodb_stop_cmd = "systemctl stop ${service_name}"
+        $_mongodb_start_cmd = "systemctl start ${service_name}"
+        $_mongodb_restart_cmd = "systemctl restart ${service_name}"
         $_mongodb_exec_path = ['/usr/sbin', '/usr/bin', '/sbin', '/bin']
 
         # stop mongodb; disable auth

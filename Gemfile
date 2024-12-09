@@ -27,7 +27,7 @@ group :development do
   gem "rspec-puppet-facts", '~> 4.0',            require: false
   gem "dependency_checker", '~> 1.0.0',          require: false
   gem "parallel_tests", '= 3.12.1',              require: false
-  gem "pry", '~> 0.10',                          require: false
+  gem "pry", '~> 0.14.2',                        require: false
   gem "simplecov-console", '~> 0.9.2',           require: false
   gem "puppet-debugger", '~> 1.0',               require: false
   gem "rubocop", '~> 1.50.0',                    require: false
@@ -38,7 +38,8 @@ group :development do
 end
 group :development, :release_prep do
   gem "puppet-strings", '~> 4.0',         require: false
-  gem "puppetlabs_spec_helper", '~> 7.0', require: false
+  gem "puppetlabs_spec_helper", '~> 8.0', require: false
+  gem "puppet-blacksmith", '~> 7.0',      require: false
 end
 group :system_tests do
   gem "puppet_litmus", '~> 1.0',   require: false, platforms: [:ruby, :x64_mingw]

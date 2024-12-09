@@ -73,7 +73,7 @@
 #
 class st2::auth::ldap (
   Stdlib::Absolutepath            $conf_file        = $st2::conf_file,
-  Stdlib::HTTPUrl                 $host             = '',
+  String                          $host             = undef,
   Boolean                         $use_tls          = false,
   Boolean                         $use_ssl          = false,
   Integer                         $port             = 389,

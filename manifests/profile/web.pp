@@ -86,7 +86,7 @@ class st2::profile::web (
   include st2::params
 
   ## Install the packages
-  ensure_packages([$st2::st2_web_packages],
+  ensure_packages($st2::st2_web_packages,
     {
       ensure  => $version,
       tag     => ['st2::packages', 'st2::web::packages'],
@@ -94,7 +94,7 @@ class st2::profile::web (
       notify  => Service['nginx'], # notify to force a refresh if the package is updated
     }
   )
-  # package { $st2::params::st2_web_packages:
+  # package { $st2::st2_web_packages:
   #   ensure  => $version,
   #   tag     => ['st2::packages', 'st2::web::packages'],
   #   require => Package['nginx'],
@@ -249,7 +249,7 @@ class st2::profile::web (
       rewrite_rules       => [
         '^/api/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::api_port}",
+      proxy               => "http://127.0.0.1:${st2::api_port}",
       location_cfg_append => {
         'error_page'                => '502 = @apiError',
         'chunked_transfer_encoding' => 'off',
@@ -303,7 +303,7 @@ class st2::profile::web (
       rewrite_rules       => [
         '^/stream/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::stream_port}",
+      proxy               => "http://127.0.0.1:${st2::stream_port}",
       location_cfg_append => {
         'error_page'                => '502 = @streamError',
         'chunked_transfer_encoding' => 'off',
@@ -332,7 +332,7 @@ class st2::profile::web (
       rewrite_rules       => [
         '^/auth/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::auth_port}",
+      proxy               => "http://127.0.0.1:${st2::auth_port}",
       proxy_pass_header   => [
         'Authorization',
       ],

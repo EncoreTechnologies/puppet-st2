@@ -28,15 +28,15 @@ define st2::user (
   Boolean               $client            = true,
   Boolean               $server            = false,
   Boolean               $create_sudo_entry = false,
-  String                $ssh_key_type      = undef,
-  String                $ssh_public_key    = undef,
-  String                $ssh_private_key   = undef,
+  Optional[String]      $ssh_key_type      = undef,
+  Optional[String]      $ssh_public_key    = undef,
+  Optional[String]      $ssh_private_key   = undef,
   String                $groups            = undef,
   Stdlib::Absolutepath  $ssh_dir           = "/home/${name}/.ssh",
 ) {
   include st2::params
 
-  $_packs_group_name = $st2::params::packs_group_name
+  $_packs_group_name = $st2::packs_group
 
   if $create_sudo_entry {
     if !defined(Class['sudo']) and !defined(Class['sudo']) {

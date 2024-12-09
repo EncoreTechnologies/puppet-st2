@@ -16,8 +16,8 @@
 #   Name of all the notifier services
 #
 class st2::notifier (
-  Integer     $notifier_num       = $st2::notifier_num,
-  String[1]   $notifier_services  = $st2::notifier_services,
+  Integer           $notifier_num       = $st2::notifier_num,
+  Array[String[1]]  $notifier_services  = $st2::notifier_services,
 ) inherits st2 {
   #
   $_logger_config = $st2::syslog ? {

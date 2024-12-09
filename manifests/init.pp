@@ -119,6 +119,8 @@
 #   MongoDB. Note: On new versions of Puppet (4.0+)
 #   you'll need to disable this setting.
 #   (default: true)
+# @param mongodb_service_name
+#   Name of the MongoDB service, defaults to 'mongod'
 # @param nginx_manage_repo
 #   Set this to false when you have your own repositories for nginx
 #   (default: true)
@@ -383,6 +385,7 @@ class st2 (
   Boolean                     $metrics_include            = false,
   Boolean                     $mongodb_auth               = true,
   Boolean                     $mongodb_manage_repo        = true,
+  String                      $mongodb_service_name       = 'mongod',
   Optional[String]            $mongodb_version            = undef,
   Boolean                     $ng_init                    = true,
   Boolean                     $nginx_basicstatus_enabled  = false,
@@ -420,9 +423,9 @@ class st2 (
   Array[String[1]]            $scheduler_services         = ['st2scheduler'],
   Float                       $scheduler_sleep_interval   = 0.1,
   Stdlib::Absolutepath        $ssh_key_location           = '/home/stanley/.ssh/st2_stanley_key',
-  String                      $ssl_cert                   = "${ssl_dir}/st2.crt",
   Boolean                     $ssl_cert_manage            = true,
   Stdlib::Absolutepath        $ssl_dir                    = '/etc/ssl/st2',
+  String                      $ssl_cert                   = "${ssl_dir}/st2.crt",
   String                      $ssl_key                    = "${ssl_dir}/st2.key",
   Array[String]               $st2_web_packages           = ['st2web'],
   Stdlib::Port                $stream_port                = 9102,

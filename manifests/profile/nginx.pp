@@ -16,15 +16,25 @@
 #  }
 #
 class st2::profile::nginx (
-  Boolean  $manage_repo    = $st2::nginx_manage_repo,
-  String   $ssl_ciphers    = $st2::nginx_ssl_ciphers,
-  String   $ssl_protocols  = $st2::nginx_ssl_protocols,
+  Boolean                          $manage_repo    = $st2::nginx_manage_repo,
+  Variant[Array[String], String]   $ssl_ciphers    = $st2::nginx_ssl_ciphers,
+  Variant[Array[String], String]   $ssl_protocols  = $st2::nginx_ssl_protocols,
 ) inherits st2 {
   #
+  # Convert the ssl_ciphers and ssl_protocols to strings
+  $_ssl_ciphers = $ssl_ciphers ? {
+    Array[String] => join($ssl_ciphers, ':'),
+    String        => $ssl_ciphers,
+  }
+  $_ssl_protocols = $ssl_protocols ? {
+    Array[String] => join($ssl_protocols, ' '),
+    String        => $ssl_protocols,
+  }
+
   class { 'nginx':
     confd_purge   => true,
     manage_repo   => $manage_repo,
-    ssl_ciphers   => $ssl_ciphers,
-    ssl_protocols => $ssl_protocols,
+    ssl_ciphers   => $_ssl_ciphers,
+    ssl_protocols => $_ssl_protocols,
   }
 }

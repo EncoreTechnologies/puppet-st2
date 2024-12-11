@@ -68,6 +68,7 @@ class st2::profile::rabbitmq (
     yumrepo { 'erlang':
       ensure        => present,
       name          => 'rabbitmq_erlang',
+      descr         => 'RabbitMQ Erlang',
       baseurl       => $erlang_url,
       gpgkey        => $erlang_key,
       enabled       => 1,

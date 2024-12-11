@@ -91,7 +91,7 @@ class st2::profile::chatops (
 
   ########################################
   ## Packages
-  ensure_packages([$chatops_packages],
+  ensure_packages($chatops_packages,
     {
       'ensure' => $version,
       'tag'    => ['st2::packages', 'st2::chatops::packages'],

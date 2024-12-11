@@ -54,7 +54,7 @@ define st2::pack (
     # Register package after it is downloaded and configured
     St2_pack<| name == $pack |>
     -> File["/opt/stackstorm/configs/${pack}.yaml"]
-    ~> Exec<| tag == 'st2::register-configs' |>
+    -> Exec<| tag == 'st2::register-configs' |>
   }
 
   Service<| tag == 'st2::service' |> -> St2_pack<||>

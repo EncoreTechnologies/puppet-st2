@@ -1,6 +1,6 @@
 # @summary StackStorm compatable installation of Python and dependencies.
 #
-# @param python_use_epel_repo
+# @param manage_epel_repo
 #   Use the EPEL repository to install Python. Default is true.
 # @param version
 #   Version of Python to install. Default is 'system' meaning the system version
@@ -22,8 +22,8 @@
 #  include st2::profile::python
 #
 class st2::profile::python (
-  String    $version               = $st2::python_version,
-  Boolean   $python_use_epel_repo  = $st2::python_use_epel_repo,
+  String    $version           = $st2::python_version,
+  Boolean   $manage_epel_repo  = $st2::manage_epel_repo,
 ) inherits st2 {
   notice("Python version: ${version}")
   if !defined(Class['python']) {
@@ -32,7 +32,7 @@ class st2::profile::python (
       version            => $version,
       dev                => present,
       manage_pip_package => false,
-      use_epel           => $python_use_epel_repo,
+      use_epel           => $manage_epel_repo,
     }
   }
 }

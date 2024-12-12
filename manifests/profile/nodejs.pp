@@ -56,7 +56,6 @@ class st2::profile::nodejs (
       }
     } else {
       class { 'nodejs':
-        repo_url_suffix     => $nodejs_version,
         manage_package_repo => $manage_repo,
         npm_package_ensure  => 'present',
       }
@@ -75,7 +74,7 @@ class st2::profile::nodejs (
   } else {
     # install nodejs from nodesource repo
     class { 'nodejs':
-      repo_url_suffix     => $nodejs_version,
+      #repo_url_suffix     => $nodejs_version,
       manage_package_repo => $manage_repo,
     }
   }

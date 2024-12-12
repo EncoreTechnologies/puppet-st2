@@ -246,7 +246,6 @@
 # @param ng_init
 # @param nginx_basicstatus_enabled
 # @param nginx_basicstatus_port
-# @param python_use_epel_repo
 # @param rabbitmq_bind_ip
 # @param rabbitmq_hostname
 # @param rabbitmq_password
@@ -401,7 +400,6 @@ class st2 (
   Array[String[1]]            $notifier_services          = ['st2notifier'],
   Variant[String, Hash]       $packs                      = {},
   String[1]                   $packs_group                = 'st2packs',
-  Boolean                     $python_use_epel_repo       = true,
   St2::Ensure                 $python_version             = 'system',
   Stdlib::IP::Address         $rabbitmq_bind_ip           = '127.0.0.1',
   Stdlib::Host                $rabbitmq_hostname          = $hostname,

@@ -133,6 +133,7 @@ class st2::profile::rabbitmq (
       'RABBITMQ_NODE_IP_ADDRESS' => $st2::rabbitmq_bind_ip,
     },
     manage_python         => false,
+    require_epel          => $manage_epel_repo,
   }
 
   contain 'rabbitmq'

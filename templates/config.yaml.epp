@@ -1,0 +1,5 @@
+<% |
+  $config,
+| -%>
+<%- require 'yaml' -%>
+<%= YAML.dump($config) %>

@@ -24,19 +24,19 @@
 #    ssh_private_key => '----- BEGIN RSA PRIVATE KEY -----\nDEADBEEF\n----- END RSA PRIVATE KEY -----',
 #  }
 #
-define st2::user(
-  $client            = true,
-  $server            = false,
-  $create_sudo_entry = false,
-  $ssh_key_type      = undef,
-  $ssh_public_key    = undef,
-  $ssh_private_key   = undef,
-  $groups            = undef,
-  $ssh_dir           = "/home/${name}/.ssh",
+define st2::user (
+  Boolean               $client            = true,
+  Boolean               $server            = false,
+  Boolean               $create_sudo_entry = false,
+  Optional[String]      $ssh_key_type      = undef,
+  Optional[String]      $ssh_public_key    = undef,
+  Optional[String]      $ssh_private_key   = undef,
+  String                $groups            = undef,
+  Stdlib::Absolutepath  $ssh_dir           = "/home/${name}/.ssh",
 ) {
   include st2::params
 
-  $_packs_group_name = $st2::params::packs_group_name
+  $_packs_group_name = $st2::packs_group
 
   if $create_sudo_entry {
     if !defined(Class['sudo']) and !defined(Class['sudo']) {
@@ -50,36 +50,38 @@ define st2::user(
       }
     }
 
-    ensure_resource('sudo::conf', $name, {
-      'priority' => '10',
-      # note: passes in $name variable into template
-      'content'  => template('st2/etc/sudoers.d/user.erb'),
-    })
+    ensure_resource('sudo::conf', $name,
+      {
+        'priority' => 10,
+        # note: passes in $name variable into template
+        'content'  => epp('st2/etc/sudoers.d/user.epp', { name => $name, })
+      }
+    )
   }
 
-  ensure_resource('group', $_packs_group_name, {
-    'ensure' => present,
-  })
+  ensure_resource('group', $_packs_group_name, { 'ensure' => present, })
 
-  ensure_resource('group', $name, {
-    'ensure' => present,
-  })
+  ensure_resource('group', $name, { 'ensure' => present, })
 
-  ensure_resource('user', $name, {
-    'ensure'     => present,
-    'shell'      => '/bin/bash',
-    'gid'        => $name,
-    'groups'     => $groups,
-    'managehome' => true,
-  })
+  ensure_resource('user', $name,
+    {
+      'ensure'     => present,
+      'shell'      => '/bin/bash',
+      'gid'        => $name,
+      'groups'     => $groups,
+      'managehome' => true,
+    }
+  )
 
   ### Setup SSH Keys ###
-  ensure_resource('file', $ssh_dir, {
-    'ensure' => directory,
-    'owner'  => $name,
-    'group'  => $name,
-    'mode'   => '0700',
-  })
+  ensure_resource('file', $ssh_dir,
+    {
+      'ensure' => directory,
+      'owner'  => $name,
+      'group'  => $name,
+      'mode'   => '0700',
+    }
+  )
 
   if $server {
     if !$ssh_private_key {
@@ -95,8 +97,10 @@ define st2::user(
         creates => $_ssh_keygen_key_path,
         path    => ['/usr/bin', '/sbin', '/bin'],
         require => File[$ssh_dir],
-        before  => [File["${ssh_dir}/st2_${name}_key"],
-                    File["${ssh_dir}/st2_${name}_key.pub"]],
+        before  => [
+          File["${ssh_dir}/st2_${name}_key"],
+          File["${ssh_dir}/st2_${name}_key.pub"]
+        ],
       }
 
       # define these files so proper owner and permissions are set
@@ -137,12 +141,14 @@ define st2::user(
   if $client {
     if $_ssh_keygen {
       # set proper owner + permissions on authorized keys
-      ensure_resource('file', "${ssh_dir}/authorized_keys", {
-        'ensure' => file,
-        'owner'  => $name,
-        'group'  => $name,
-        'mode'   => '0600'
-      })
+      ensure_resource('file', "${ssh_dir}/authorized_keys",
+        {
+          'ensure' => file,
+          'owner'  => $name,
+          'group'  => $name,
+          'mode'   => '0600'
+        }
+      )
 
       # add this user's key to authorized_keys
       exec { "add st2_${name}_key to ssh authorized keys":
@@ -162,7 +168,12 @@ define st2::user(
       }
     }
     else {
-      notify { "St2::User[${name}]: ${st2::notices::user_missing_client_keys}": }
+      $missing_client_keys = @("EOF"/L)
+        ssh_public_key and ssh_key_type need to be supplied for this resource.
+        Help can be found in INSTALL.md if needed
+        |-EOF
+
+      notify { "St2::User[${name}]: ${missing_client_keys}": }
     }
   }
   ### END Setup SSH Keys ###

@@ -8,18 +8,14 @@ class st2::profile::selinux inherits st2::params {
   if ( ($facts['os']['family'] == 'RedHat') and ($facts['os']['selinux']['current_mode'] == 'enforcing')) {
     if (Numeric($facts['os']['release']['major']) >= 8) { # package was renamed in el8
       $package_policycoreutils = 'policycoreutils-python-utils'
-    }
-    else {
+    } else {
       $package_policycoreutils = 'policycoreutils-python'
     }
-    if !defined(Package[$package_policycoreutils]) {
-      package { $package_policycoreutils:
-        ensure => present,
-      }
-    }
+
+    ensure_packages([$package_policycoreutils], { 'ensure' => 'present' })
 
     # nginx doesn't so we have to enable this here
-    selinux::boolean {'st2 nginx httpd_can_network_connect':
+    selinux::boolean { 'st2 nginx httpd_can_network_connect':
       ensure => 'on',
       name   => 'httpd_can_network_connect',
     }

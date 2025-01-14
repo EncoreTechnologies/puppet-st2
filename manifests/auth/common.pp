@@ -1,5 +1,7 @@
 # @summary Class that contains all of the "common" settings for auth.
 #
+# @api private
+#
 # @note Don't use directly
 #
 # @param api_url
@@ -18,27 +20,29 @@
 #  Path to SSL Key file (default: '/etc/ssl/st2/st2.key')
 #
 class st2::auth::common (
-  $api_url   = $st2::auth_api_url,
-  $conf_file = $st2::conf_file,
-  $debug     = $st2::auth_debug,
-  $mode      = $st2::auth_mode,
-  $use_ssl   = $st2::use_ssl,
-  $ssl_cert  = $st2::ssl_cert,
-  $ssl_key   = $st2::ssl_key,
+  Stdlib::HTTPUrl              $api_url   = $st2::auth_api_url,
+  Stdlib::Absolutepath         $conf_file = $st2::conf_file,
+  Boolean                      $debug     = $st2::auth_debug,
+  Enum['proxy', 'standalone']  $mode      = $st2::auth_mode,
+  Boolean                      $use_ssl   = $st2::use_ssl,
+  Stdlib::Absolutepath         $ssl_cert  = $st2::ssl_cert,
+  Stdlib::Absolutepath         $ssl_key   = $st2::ssl_key,
 ) inherits st2 {
-
   $_debug = $debug ? {
     true    => 'True',
     default => 'False',
   }
+
   $_mode = $mode ? {
     'standalone' => 'standalone',
     'proxy'      => 'proxy',
     default      => undef,
   }
+
   if $_mode == undef {
     fail("[st2::auth] Unsupported mode: ${mode}")
   }
+
   $_use_ssl = $use_ssl ? {
     true    => 'True',
     default => 'False',
@@ -52,6 +56,7 @@ class st2::auth::common (
     value   => $_mode,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_debug':
     ensure  => present,
     path    => $conf_file,
@@ -60,6 +65,7 @@ class st2::auth::common (
     value   => $_debug,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_ssl':
     ensure  => present,
     path    => $conf_file,
@@ -68,6 +74,7 @@ class st2::auth::common (
     value   => $_use_ssl,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_api_url':
     ensure  => present,
     path    => $conf_file,
@@ -91,6 +98,7 @@ class st2::auth::common (
       value   => $ssl_cert,
       tag     => 'st2::config',
     }
+
     ini_setting { 'auth_ssl_key':
       ensure  => present,
       path    => $conf_file,

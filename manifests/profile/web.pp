@@ -1,5 +1,9 @@
 # @summary  Profile to install, configure and manage StackStorm web UI (st2web).
 #
+# @param basicstatus_enabled
+#   Boolean to determine if the basic status page should be enabled in nginx.
+# @param basicstatus_port
+#   Port to listen on for the basic status page.
 # @param nginx_ssl_ciphers
 #   String or list of strings of acceptable SSL ciphers to configure nginx with.
 #   @see http://nginx.org/en/docs/http/ngx_http_ssl_module.html
@@ -60,19 +64,19 @@
 #     ],
 #   }
 #
-class st2::profile::web(
-  Variant[Array[String], String] $nginx_ssl_ciphers   = $st2::nginx_ssl_ciphers,
-  Variant[Array[String], String] $nginx_ssl_protocols = $st2::nginx_ssl_protocols,
-  Stdlib::Port $nginx_ssl_port                        = $st2::nginx_ssl_port,
-  String $nginx_client_max_body_size                  = $st2::nginx_client_max_body_size,
-  Boolean $ssl_cert_manage                            = $st2::ssl_cert_manage,
-  Stdlib::Absolutepath $ssl_dir                       = $st2::ssl_dir,
-  String $ssl_cert                                    = $st2::ssl_cert,
-  String $ssl_key                                     = $st2::ssl_key,
-  String $version                                     = $st2::version,
-  String $web_root                                    = $st2::web_root,
-  Integer $basicstatus_port                           = $st2::nginx_basicstatus_port,
-  Boolean $basicstatus_enabled                        = $st2::nginx_basicstatus_enabled,
+class st2::profile::web (
+  Variant[Array[String], String]  $nginx_ssl_ciphers           = $st2::nginx_ssl_ciphers,
+  Variant[Array[String], String]  $nginx_ssl_protocols         = $st2::nginx_ssl_protocols,
+  Stdlib::Port                    $nginx_ssl_port              = $st2::nginx_ssl_port,
+  String                          $nginx_client_max_body_size  = $st2::nginx_client_max_body_size,
+  Boolean                         $ssl_cert_manage             = $st2::ssl_cert_manage,
+  Stdlib::Absolutepath            $ssl_dir                     = $st2::ssl_dir,
+  String                          $ssl_cert                    = "${ssl_dir}/st2.crt",
+  String                          $ssl_key                     = "${ssl_dir}/st2.key",
+  String                          $version                     = $st2::version,
+  String                          $web_root                    = $st2::web_root,
+  Integer                         $basicstatus_port            = $st2::nginx_basicstatus_port,
+  Boolean                         $basicstatus_enabled         = $st2::nginx_basicstatus_enabled,
 ) inherits st2 {
   # include nginx here only
   # if we include this in st2::profile::fullinstall Anchor['pre_reqs'] then
@@ -82,16 +86,27 @@ class st2::profile::web(
   include st2::params
 
   ## Install the packages
-  package { $st2::params::st2_web_packages:
-    ensure  => $version,
-    tag     => ['st2::packages', 'st2::web::packages'],
-    require => Package['nginx'],
-    notify  => Service['nginx'], # notify to force a refresh if the package is updated
-  }
+  ensure_packages($st2::st2_web_packages,
+    {
+      ensure  => $version,
+      tag     => ['st2::packages', 'st2::web::packages'],
+      require => Package['nginx'],
+      notify  => Service['nginx'], # notify to force a refresh if the package is updated
+    }
+  )
+  # package { $st2::st2_web_packages:
+  #   ensure  => $version,
+  #   tag     => ['st2::packages', 'st2::web::packages'],
+  #   require => Package['nginx'],
+  #   notify  => Service['nginx'], # notify to force a refresh if the package is updated
+  # }
 
   ## Create ssl cert directory
   file { $ssl_dir:
-    ensure  => directory,
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
   }
 
   ## optionally manage the SSL certificate used by nginx
@@ -101,8 +116,10 @@ class st2::profile::web(
       true => $trusted['certname'][0,64],
       default => $trusted['certname'],
     }
+
     $_ssl_subj = "/C=US/ST=California/L=Palo Alto/O=StackStorm/OU=Information Technology/CN=${_truncated_certname}"
     ## Generate SSL certificates
+
     exec { "generate ssl cert ${ssl_cert}":
       command => "openssl req -x509 -newkey rsa:2048 -keyout ${ssl_key} -out ${ssl_cert} -days 365 -nodes -subj \"${_ssl_subj}\"",
       creates => $ssl_cert,
@@ -118,6 +135,7 @@ class st2::profile::web(
     'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
     'X-Content-Type-Options'    => 'nosniff',
   }
+
   nginx::resource::server { 'st2webui':
     ensure       => present,
     listen_port  => 80,
@@ -133,6 +151,7 @@ class st2::profile::web(
     Array[String] => $nginx_ssl_ciphers.join(':'),
     String        => $nginx_ssl_ciphers,
   }
+
   $nginx_ssl_protocols_str = $nginx_ssl_protocols ? {
     Array[String] => $nginx_ssl_protocols.join(' '),
     String        => $nginx_ssl_protocols,
@@ -142,7 +161,7 @@ class st2::profile::web(
   nginx::resource::server { $ssl_server:
     ensure               => present,
     listen_port          => $nginx_ssl_port,
-    index_files          => [ 'index.html' ],
+    index_files          => ['index.html'],
     access_log           => "${nginx::config::log_dir}/${ssl_server}.access.log",
     error_log            => "${nginx::config::log_dir}/${ssl_server}.error.log",
     # disable the built-in 'location /' (in puppet-nginx) so we can define our own below
@@ -174,7 +193,7 @@ class st2::profile::web(
     # added to the ssl site above
     ssl         => true,
     ssl_only    => true,
-    index_files => [ ],
+    index_files => [],
   }
 
   # the proxy locations contain all of the location settings plus some common
@@ -202,7 +221,7 @@ class st2::profile::web(
   # root website location for st2webui
   nginx::resource::location { '/':
     * => $location_defaults + {
-      index_files         => [ 'index.html' ],
+      index_files         => ['index.html'],
       www_root            => $web_root,
       location_cfg_append => {
         'sendfile'    => 'on',
@@ -230,7 +249,7 @@ class st2::profile::web(
       rewrite_rules       => [
         '^/api/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::api_port}",
+      proxy               => "http://127.0.0.1:${st2::api_port}",
       location_cfg_append => {
         'error_page'                => '502 = @apiError',
         'chunked_transfer_encoding' => 'off',
@@ -284,7 +303,7 @@ class st2::profile::web(
       rewrite_rules       => [
         '^/stream/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::stream_port}",
+      proxy               => "http://127.0.0.1:${st2::stream_port}",
       location_cfg_append => {
         'error_page'                => '502 = @streamError',
         'chunked_transfer_encoding' => 'off',
@@ -313,7 +332,7 @@ class st2::profile::web(
       rewrite_rules       => [
         '^/auth/(.*)  /$1 break',
       ],
-      proxy               => "http://127.0.0.1:${st2::params::auth_port}",
+      proxy               => "http://127.0.0.1:${st2::auth_port}",
       proxy_pass_header   => [
         'Authorization',
       ],

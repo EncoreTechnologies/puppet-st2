@@ -1,0 +1,19 @@
+<%- |
+  Stdlib::HTTPUrl  $api_url,
+  Stdlib::HTTPUrl  $auth_url,
+| -%>
+## This file is maintained by Puppet
+
+# URL to the StackStorm API service (st2api) 
+<%- if $api_url { -%>
+export ST2_API_URL="<%= $api_url %>"
+<%- } else { -%>
+# export ST2_API_URL=""
+<%- } -%>
+
+# URL to the StackStorm auth service (st2auth) 
+<%- if $auth_url { -%>
+export ST2_AUTH_URL="<%= $auth_url %>"
+<%- } else { -%>
+# export ST2_AUTH_URL=""
+<%- } -%>

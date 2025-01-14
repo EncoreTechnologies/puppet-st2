@@ -30,48 +30,69 @@
 #    Syslog facility.
 # @param ssh_key_location
 #    Location on filesystem of Admin SSH key for remote runner
+# @param ng_init
+#    Initialize the NG2 UI
 # @param db_username
 #    Username to connect to MongoDB with (default: 'stackstorm')
 # @param db_password
 #    Password for 'stackstorm' user in MongDB.
 # @param index_url
 #    Url to the StackStorm Exchange index file. (default undef)
+# @param packs_group
+#    Group to own the packs directory. (default: 'st2packs')
+# @param validate_output_schema
+#    Validate output schema for actions. (default: false)
+# @param rabbitmq_username
+#    Username to connect to RabbitMQ with (default: 'st2admin')
+# @param rabbitmq_password
+#    Password for 'guest' user in RabbitMQ.
+# @param rabbitmq_hostname
+#    Hostname of RabbitMQ server.
+# @param rabbitmq_port
+#    Port of RabbitMQ server.
+# @param rabbitmq_vhost
+#    Virtual host to connect to in RabbitMQ.
+# @param redis_hostname
+#    Hostname of Redis server.
+# @param redis_port
+#    Port of Redis server.
+# @param redis_password
+#    Password for Redis server.
 #
 # @example Basic usage
 #  include st2::profile::server
 #
 class st2::profile::server (
-  $version                = $st2::version,
-  $conf_dir               = $st2::conf_dir,
-  $conf_file              = $st2::conf_file,
-  $auth                   = $st2::auth,
-  $actionrunner_workers   = $st2::actionrunner_workers,
-  $syslog                 = $st2::syslog,
-  $syslog_host            = $st2::syslog_host,
-  $syslog_port            = $st2::syslog_port,
-  $syslog_facility        = $st2::syslog_facility,
-  $syslog_protocol        = $st2::syslog_protocol,
-  $st2api_listen_ip       = '127.0.0.1',
-  $st2api_listen_port     = '9101',
-  $st2auth_listen_ip      = '127.0.0.1',
-  $st2auth_listen_port    = '9100',
-  $ssh_key_location       = $st2::ssh_key_location,
-  $ng_init                = $st2::ng_init,
-  $db_username            = $st2::db_username,
-  $db_password            = $st2::db_password,
-  $rabbitmq_username      = $st2::rabbitmq_username,
-  $rabbitmq_password      = $st2::rabbitmq_password,
-  $rabbitmq_hostname      = $st2::rabbitmq_hostname,
-  $rabbitmq_port          = $st2::rabbitmq_port,
-  $rabbitmq_vhost         = $st2::rabbitmq_vhost,
-  $redis_hostname         = $st2::redis_hostname,
-  $redis_port             = $st2::redis_port,
-  $redis_password         = $st2::redis_password,
-  $index_url              = $st2::index_url,
-  $packs_group            = $st2::packs_group_name,
-  $validate_output_schema = $st2::validate_output_schema,
+  St2::Ensure                $version                = $st2::version,
+  Stdlib::Absolutepath       $conf_dir               = $st2::conf_dir,
+  Stdlib::Absolutepath       $conf_file              = $st2::conf_file,
+  Boolean                    $auth                   = $st2::auth,
+  Integer                    $actionrunner_workers   = $st2::actionrunner_workers,
+  Boolean                    $syslog                 = $st2::syslog,
+  Stdlib::Host               $syslog_host            = $st2::syslog_host,
+  Stdlib::Port               $syslog_port            = $st2::syslog_port,
+  String[1]                  $syslog_facility        = $st2::syslog_facility,
+  Enum['tcp','udp']          $syslog_protocol        = $st2::syslog_protocol,
+  String                     $st2api_listen_ip       = '127.0.0.1',
+  String                     $st2api_listen_port     = '9101',
+  String                     $st2auth_listen_ip      = '127.0.0.1',
+  String                     $st2auth_listen_port    = '9100',
+  Stdlib::Absolutepath       $ssh_key_location       = $st2::ssh_key_location,
+  Boolean                    $ng_init                = $st2::ng_init,
+  String[1]                  $db_username            = $st2::db_username,
+  String[1]                  $db_password            = $st2::db_password,
+  Optional[String[1]]        $rabbitmq_username      = $st2::rabbitmq_username,
+  Optional[String[1]]        $rabbitmq_password      = $st2::rabbitmq_password,
+  Stdlib::Host               $rabbitmq_hostname      = $st2::rabbitmq_hostname,
+  Stdlib::Port               $rabbitmq_port          = $st2::rabbitmq_port,
+  String                     $rabbitmq_vhost         = $st2::rabbitmq_vhost,
+  Stdlib::Host               $redis_hostname         = $st2::redis_hostname,
+  Stdlib::Port               $redis_port             = $st2::redis_port,
+  Optional[String]           $redis_password         = $st2::redis_password,
+  Optional[Stdlib::HTTPUrl]  $index_url              = $st2::index_url,
+  String                     $packs_group            = $st2::packs_group,
+  Boolean                    $validate_output_schema = $st2::validate_output_schema,
 ) inherits st2 {
-  include st2::notices
   include st2::params
 
   $_enable_auth = $auth ? {
@@ -89,46 +110,54 @@ class st2::profile::server (
 
   ########################################
   ## Packages
-  package { $st2::params::st2_server_packages:
-    ensure => $version,
-    tag    => ['st2::packages', 'st2::server::packages'],
-  }
+  ensure_packages($st2::params::st2_server_packages,
+    {
+      'ensure' => $version,
+      'tag'    => ['st2::packages', 'st2::server::packages'],
+    }
+  )
 
-  ensure_resource('file', '/opt/stackstorm', {
-    'ensure' => 'directory',
-    'owner'  => 'root',
-    'group'  => 'root',
-    'mode'   => '0755',
-    'tag'    => 'st2::server',
-  })
+  ensure_resource('file', '/opt/stackstorm',
+    {
+      'ensure' => 'directory',
+      'owner'  => 'root',
+      'group'  => 'root',
+      'mode'   => '0755',
+      'tag'    => 'st2::server',
+    }
+  )
 
-  ensure_resource('group', $packs_group, {
-    'ensure' => present,
-  })
+  ensure_resource('group', $packs_group, { 'ensure' => present, })
 
-  ensure_resource('file', '/opt/stackstorm/configs', {
-    'ensure'  => 'directory',
-    'owner'   => 'st2',
-    'group'   => 'root',
-    'mode'    => '0755',
-    'tag'     => 'st2::server',
-  })
+  ensure_resource('file', '/opt/stackstorm/configs',
+    {
+      'ensure'  => 'directory',
+      'owner'   => 'st2',
+      'group'   => 'root',
+      'mode'    => '0755',
+      'tag'     => 'st2::server',
+    }
+  )
 
-  ensure_resource('file', '/opt/stackstorm/packs', {
-    'ensure'  => 'directory',
-    'owner'   => 'root',
-    'group'   => $packs_group,
-    'mode'    => '0775',
-    'tag'     => 'st2::server',
-  })
+  ensure_resource('file', '/opt/stackstorm/packs',
+    {
+      'ensure'  => 'directory',
+      'owner'   => 'root',
+      'group'   => $packs_group,
+      'mode'    => '0775',
+      'tag'     => 'st2::server',
+    }
+  )
 
-  ensure_resource('file', '/opt/stackstorm/virtualenvs', {
-    'ensure'  => 'directory',
-    'owner'   => 'root',
-    'group'   => $packs_group,
-    'mode'    => '0755',
-    'tag'     => 'st2::server',
-  })
+  ensure_resource('file', '/opt/stackstorm/virtualenvs',
+    {
+      'ensure'  => 'directory',
+      'owner'   => 'root',
+      'group'   => $packs_group,
+      'mode'    => '0755',
+      'tag'     => 'st2::server',
+    }
+  )
 
   recursive_file_permissions { '/opt/stackstorm/packs':
     owner => 'root',
@@ -173,7 +202,11 @@ class st2::profile::server (
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => template('st2/etc/sysconfig/st2actionrunner.erb'),
+    content => epp('st2/etc/sysconfig/st2actionrunner.epp',
+      {
+        actionrunner_workers => $actionrunner_workers
+      }
+    ),
     tag     => 'st2::config',
   }
 
@@ -186,6 +219,7 @@ class st2::profile::server (
     value   => $st2api_listen_ip,
     tag     => 'st2::config',
   }
+
   ini_setting { 'api_listen_port':
     ensure  => present,
     path    => $conf_file,
@@ -194,6 +228,7 @@ class st2::profile::server (
     value   => $st2api_listen_port,
     tag     => 'st2::config',
   }
+
   ini_setting { 'api_allow_origin':
     ensure  => 'present',
     path    => $conf_file,
@@ -202,6 +237,7 @@ class st2::profile::server (
     value   => '*',
     tag     => 'st2::config',
   }
+
   ini_setting { 'api_logging':
     ensure  => present,
     path    => $conf_file,
@@ -220,6 +256,7 @@ class st2::profile::server (
     value   => $_enable_auth,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_listen_port':
     ensure  => present,
     path    => $conf_file,
@@ -228,6 +265,7 @@ class st2::profile::server (
     value   => $st2auth_listen_port,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_listen_ip':
     ensure  => present,
     path    => $conf_file,
@@ -236,6 +274,7 @@ class st2::profile::server (
     value   => $st2auth_listen_ip,
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_logging':
     ensure  => present,
     path    => $conf_file,
@@ -254,6 +293,7 @@ class st2::profile::server (
     value   => $db_username,
     tag     => 'st2::config',
   }
+
   ini_setting { 'database_password':
     ensure  => present,
     path    => $conf_file,
@@ -287,7 +327,6 @@ class st2::profile::server (
     value   => $_redis_url,
     tag     => 'st2::config',
   }
-
 
   ## Resultstracker Settings
   ini_setting { 'resultstracker_logging':
@@ -340,6 +379,7 @@ class st2::profile::server (
     value   => $syslog_host,
     tag     => 'st2::config',
   }
+
   ini_setting { 'syslog_protocol':
     ensure  => present,
     path    => $conf_file,
@@ -348,6 +388,7 @@ class st2::profile::server (
     value   => $syslog_protocol,
     tag     => 'st2::config',
   }
+
   ini_setting { 'syslog_port':
     ensure  => present,
     path    => $conf_file,
@@ -356,6 +397,7 @@ class st2::profile::server (
     value   => $syslog_port,
     tag     => 'st2::config',
   }
+
   ini_setting { 'syslog_facility':
     ensure  => present,
     path    => $conf_file,

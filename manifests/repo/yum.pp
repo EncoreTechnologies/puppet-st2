@@ -1,8 +1,10 @@
 # Yum repo for StackStorm
+#
 class st2::repo::yum {
   if $st2::repo::ensure == 'present' {
     yumrepo { "StackStorm_${st2::repo::repository}":
       baseurl       => $st2::repo::baseurl,
+      descr         => "StackStorm ${st2::repo::repository} repository",
       enabled       => '1',
       gpgcheck      => '0',
       repo_gpgcheck => '1',
@@ -11,8 +13,7 @@ class st2::repo::yum {
 
     Yumrepo["StackStorm_${st2::repo::repository}"]
     -> Package<| tag == 'st2::server::packages' |>
-  }
-  else {
+  } else {
     yumrepo { "StackStorm_${st2::repo::repository}":
       ensure => absent,
     }

@@ -1,11 +1,15 @@
 # @summary Manages a StackStorm Pack
 #
+# @param ensure
+#    Whether the pack should be present or absent.
 # @param pack
 #    Name of the pack to install.
 # @param repo_url
 #    URL of the package to install when not installing from the exchange.
 # @param config
 #    Hash that will be translated into YAML in the pack's config file after installation.
+# @param version
+#    Version of the pack to install.
 #
 # @example Basic Usage
 #  st2::pack { 'puppet': }
@@ -16,11 +20,11 @@
 #  }
 #
 define st2::pack (
-  $ensure   = present,
-  $pack     = $name,
-  $repo_url = undef,
-  $config   = undef,
-  $version  = undef,
+  Enum['present', 'absent']   $ensure   = present,
+  String                      $pack     = $name,
+  Optional[Stdlib::HTTPUrl]   $repo_url = undef,
+  Optional[Hash]              $config   = undef,
+  Optional[String]            $version  = undef,
 ) {
   include st2
   $_cli_username = $st2::cli_username
@@ -44,13 +48,13 @@ define st2::pack (
       mode    => '0640',
       owner   => 'st2',
       group   => 'root',
-      content => template('st2/config.yaml.erb'),
+      content => epp('st2/config.yaml.epp'),
     }
 
     # Register package after it is downloaded and configured
     St2_pack<| name == $pack |>
     -> File["/opt/stackstorm/configs/${pack}.yaml"]
-    ~> Exec<| tag == 'st2::register-configs' |>
+    -> Exec<| tag == 'st2::register-configs' |>
   }
 
   Service<| tag == 'st2::service' |> -> St2_pack<||>

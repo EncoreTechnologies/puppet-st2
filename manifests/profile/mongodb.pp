@@ -5,17 +5,21 @@
 # @param db_username
 #    Username to connect to db with
 # @param db_password
-#    Password for 'admin' and 'stackstorm' users in MongDB. If 'undef' then use $cli_password
+#    Password for 'admin' and 'stackstorm' users in MongDB. If 'undef' then use
+#    $cli_password
 # @param db_port
 #    Port for db server for st2 to talk to
 # @param db_bind_ips
 #    Array of bind IP addresses for MongoDB to listen on
 # @param version
-#    Version of MongoDB to install. If not provided it will be auto-calcuated based on $st2::version.
+#    Version of MongoDB to install. If not provided it will be auto-calcuated based
+#    on $st2::version.
 # @param manage_repo
 #    Set this to +false+ when you have your own repositories for mongodb
 # @param auth
 #    Boolean determining if auth should be enabled for MongoDB.
+# @param service_name
+#    Name of the MongoDB service, defaults to 'mongod'
 #
 # @example Basic Usage
 #   include st2::profile::mongodb
@@ -30,29 +34,29 @@
 #   include st2::profile::mongodb
 #
 class st2::profile::mongodb (
-  $db_name     = $st2::db_name,
-  $db_username = $st2::db_username,
-  $db_password = $st2::db_password,
-  $db_port     = $st2::db_port,
-  $db_bind_ips = $st2::db_bind_ips,
-  $version     = $st2::mongodb_version,
-  $manage_repo = $st2::mongodb_manage_repo,
-  $auth        = $st2::mongodb_auth,
+  String                       $db_name      = $st2::db_name,
+  String                       $db_username  = $st2::db_username,
+  String                       $db_password  = $st2::db_password,
+  Stdlib::Port                 $db_port      = $st2::db_port,
+  Array[Stdlib::IP::Address]   $db_bind_ips  = $st2::db_bind_ips,
+  Optional[String]             $version      = $st2::mongodb_version,
+  Boolean                      $manage_repo  = $st2::mongodb_manage_repo,
+  Boolean                      $auth         = $st2::mongodb_auth,
+  String                       $service_name = $st2::mongodb_service_name,
 ) inherits st2 {
   # if Ubuntu is 20.04 then MongoDB 4.4
   # if the StackStorm version is > 3.3.0 then MongoDB 4.0
   # if the StackStorm version is > 2.4.0 then MongoDB 3.4
   # else use MongoDB 3.2
-  if $facts['os']['family'] == 'Debian' and $facts['os']['release']['major'] == '20.04' and st2::version_ge('3.3.0') {
+  if $facts['os']['family'] == 'Debian' and
+  $facts['os']['release']['major'] == '20.04' and
+  st2::version_ge('3.3.0') {
     $_mongodb_version_default = '4.4'
-  }
-  elsif st2::version_ge('3.3.0') {
+  } elsif st2::version_ge('3.3.0') {
     $_mongodb_version_default = '4.0'
-  }
-  elsif st2::version_ge('2.4.0') {
+  } elsif st2::version_ge('2.4.0') {
     $_mongodb_version_default = '3.4'
-  }
-  else {
+  } else {
     $_mongodb_version_default = '3.2'
   }
 
@@ -65,11 +69,11 @@ class st2::profile::mongodb (
 
   if !defined(Class['mongodb::server']) {
     class { 'mongodb::globals':
-      manage_package      => true,
+      #manage_package      => true,
       manage_package_repo => $manage_repo,
       version             => $_mongodb_version,
-      bind_ip             => $db_bind_ips,
-      manage_pidfile      => false, # mongo will not start if this is true
+      #bind_ip             => $db_bind_ips,
+      #manage_pidfile      => false, # mongo will not start if this is true
     }
 
     class { 'mongodb::client': }
@@ -99,10 +103,9 @@ class st2::profile::mongodb (
       if !$facts['mongodb_auth_init'] {
         # unfortinately there is no way to synchronously force a service restart
         # in Puppet, so we have to revert to exec... sorry
-        include mongodb::params
-        $_mongodb_stop_cmd = "systemctl stop ${mongodb::params::service_name}"
-        $_mongodb_start_cmd = "systemctl start ${mongodb::params::service_name}"
-        $_mongodb_restart_cmd = "systemctl restart ${mongodb::params::service_name}"
+        $_mongodb_stop_cmd = "systemctl stop ${service_name}"
+        $_mongodb_start_cmd = "systemctl start ${service_name}"
+        $_mongodb_restart_cmd = "systemctl restart ${service_name}"
         $_mongodb_exec_path = ['/usr/sbin', '/usr/bin', '/sbin', '/bin']
 
         # stop mongodb; disable auth
@@ -111,11 +114,13 @@ class st2::profile::mongodb (
           unless  => 'grep "^security.authorization: disabled" /etc/mongod.conf',
           path    => $_mongodb_exec_path,
         }
+
         exec { 'mongodb - disable auth':
           command     => 'sed -i \'s/security.authorization: enabled/security.authorization: disabled/g\' /etc/mongod.conf',
           refreshonly => true,
           path        => $_mongodb_exec_path,
         }
+
         facter::fact { 'mongodb_auth_init':
           value => bool2str(true),
         }
@@ -135,6 +140,7 @@ class st2::profile::mongodb (
           unless  => 'grep "^security.authorization: enabled" /etc/mongod.conf',
           path    => $_mongodb_exec_path,
         }
+
         exec { 'mongodb - restart service':
           command     => $_mongodb_restart_cmd,
           refreshonly => true,
@@ -147,12 +153,12 @@ class st2::profile::mongodb (
         } else {
           $_mongodb_bind_ip = $db_bind_ips[0]
         }
+
         mongodb_conn_validator { 'mongodb - wait for restart':
           server  => $_mongodb_bind_ip,
           port    => $db_port,
           timeout => '240',
         }
-
 
         # ensure MongoDB config is present and service is running
         Class['mongodb::server::config']
@@ -173,8 +179,7 @@ class st2::profile::mongodb (
         # create other databases
         -> Mongodb::Db <| title != 'admin' |>
       }
-    }
-    else {
+    } else {
       class { 'mongodb::server':
         port => $db_port,
       }
@@ -231,5 +236,4 @@ class st2::profile::mongodb (
       require  => Class['mongodb::server'],
     }
   }
-
 }

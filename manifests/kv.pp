@@ -1,5 +1,9 @@
 # @summary Sets a value to the StackStorm Key/Value Store
 #
+# @param ensure
+#    Indicate the state of the key pair ('present' or 'absent')
+# @param apikey
+#    StackStorm API key to use
 # @param key
 #    Key to set
 # @param value
@@ -11,19 +15,19 @@
 #  }
 #
 define st2::kv (
-  $value,
-  $ensure = present,
-  $key    = $name,
-  $apikey = $st2::cli_apikey,
+  String       $value,
+  St2::Ensure  $ensure = present,
+  String       $key    = $name,
+  String       $apikey = $st2::cli_apikey,
 ) {
   include st2
 
   if $apikey {
     $_cmd_flags = "--api-key ${apikey}"
-  }
-  else {
+  } else {
     $_cmd_flags = ''
   }
+
   $_command = "st2 key set ${_cmd_flags} ${key} ${value}"
   $_unless = "st2 key get ${_cmd_flags} ${key} | grep ${key}"
   exec { "set-st2-key-${key}":

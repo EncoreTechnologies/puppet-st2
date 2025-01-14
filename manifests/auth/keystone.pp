@@ -26,9 +26,9 @@
 #    keystone_version: "3"
 #
 class st2::auth::keystone (
-  $conf_file        = $st2::conf_file,
-  $keystone_url     = 'http://127.0.0.1:5000',
-  $keystone_version = '2',
+  Stdlib::Absolutepath   $conf_file        = $st2::conf_file,
+  Stdlib::HTTPUrl        $keystone_url     = 'http://127.0.0.1:5000',
+  String                 $keystone_version = '2',
 ) inherits st2 {
   include st2::auth::common
 
@@ -41,6 +41,7 @@ class st2::auth::keystone (
     value   => 'keystone',
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_backend_kwargs':
     ensure  => present,
     path    => $conf_file,

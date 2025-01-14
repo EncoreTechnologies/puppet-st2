@@ -27,33 +27,33 @@
 #  include st2::profile::client
 #
 class st2::profile::client (
-  $auth                 = $st2::auth,
-  $api_url              = $st2::cli_api_url,
-  $auth_url             = $st2::cli_auth_url,
-  $base_url             = $st2::cli_base_url,
-  $username             = $st2::cli_username,
-  $password             = $st2::cli_password,
-  $api_version          = $st2::cli_api_version,
-  $cacert               = $st2::cli_cacert,
-  $debug                = $st2::cli_debug,
-  $cache_token          = $st2::cli_cache_token,
-  $silence_ssl_warnings = $st2::cli_silence_ssl_warnings,
+  Boolean               $auth                  = $st2::auth,
+  Stdlib::HTTPUrl       $api_url               = $st2::cli_api_url,
+  Pattern[/v[0-9]+/]    $api_version           = $st2::cli_api_version,
+  Stdlib::HTTPUrl       $auth_url              = $st2::cli_auth_url,
+  Stdlib::HTTPUrl       $base_url              = $st2::cli_base_url,
+  Stdlib::Absolutepath  $cacert                = $st2::cli_cacert,
+  Boolean               $cache_token           = $st2::cli_cache_token,
+  Boolean               $debug                 = $st2::cli_debug,
+  String[1]             $password              = $st2::cli_password,
+  Boolean               $silence_ssl_warnings  = $st2::cli_silence_ssl_warnings,
+  String[1]             $username              = $st2::cli_username,
 ) inherits st2 {
-
+  #
   # Setup st2client settings for Root user by default
   st2::client::settings { 'root':
-    homedir              => '/root',
-    auth                 => $auth,
     api_url              => $api_url,
+    api_version          => $api_version,
+    auth                 => $auth,
     auth_url             => $auth_url,
     base_url             => $base_url,
-    username             => $username,
-    password             => $password,
-    api_version          => $api_version,
     cacert               => $cacert,
-    debug                => $debug,
     cache_token          => $cache_token,
+    debug                => $debug,
+    homedir              => '/root',
+    password             => $password,
     silence_ssl_warnings => $silence_ssl_warnings,
+    username             => $username,
   }
 
   # Setup global environment variables:
@@ -62,6 +62,11 @@ class st2::profile::client (
     owner   => 'root',
     group   => 'root',
     mode    => '0755',
-    content => template('st2/etc/profile.d/st2.sh.erb'),
+    content => epp('st2/etc/profile.d/st2.sh.epp',
+      {
+        api_url  => $api_url,
+        auth_url => $auth_url,
+      }
+    ),
   }
 }

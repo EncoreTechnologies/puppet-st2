@@ -17,8 +17,8 @@
 #  st2::auth_backend: "pam"
 #  st2::auth_backend_config: {}
 #
-class st2::auth::pam(
-  $conf_file = $st2::conf_file,
+class st2::auth::pam (
+  Stdlib::Absolutepath  $conf_file = $st2::conf_file,
 ) inherits st2 {
   include st2::auth::common
 
@@ -31,6 +31,7 @@ class st2::auth::pam(
     value   => 'pam',
     tag     => 'st2::config',
   }
+
   ini_setting { 'auth_backend_kwargs':
     ensure  => present,
     path    => $conf_file,
@@ -46,10 +47,7 @@ class st2::auth::pam(
     'RedHat' => 'pam-devel',
     default  => undef,
   }
-  ensure_packages($_dep_pkgs,
-                  {
-                    'ensure' => 'present',
-                  })
+  ensure_packages($_dep_pkgs, { 'ensure' => 'present', })
 
   # install the backend package
   python::pip { 'st2-auth-backend-pam':

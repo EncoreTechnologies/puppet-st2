@@ -1,35 +1,6 @@
 # @summary Generates a configuration file for the st2 CLI (st2client)
 #
-# @param name
-#    OS-level username. Used to determine where the config file will be placed.
-# @param user
-#    See name
-# @param homedir
-#    Path to home directory of the user.
-# @param auth
-#    Is auth enabled or not.
-# @param api_url
-#    URL of the StackStorm API service
-# @param auth_url
-#    URL of the StackStorm Auth service
-# @param base_url
-#    Base URL for other StackStorm services
-# @param username
-#    Username for auth on the CLI
-# @param password
-#    Password for auth on the CLI
-# @param disable_credentials
-#    Prevents credentials (username, password) from being written to the config file
-# @param api_version
-#    Version of the StackStorm API
-# @param cacert
-#    Path to the SSL CA certficate for the StackStorm services
-# @param debug
-#    Enable debug mode
-# @param cache_token
-#    Enable cacheing authentication tokens until they expire
-# @param silence_ssl_warnings
-#    Enable silencing SSL warnings for self-signed certs
+# @api private
 #
 # @example Basic usage
 #   st2::client::settings { 'john':
@@ -37,21 +8,21 @@
 #     password => 'xyz123',
 #   }
 #
-define st2::client::settings(
-  $user                 = $name,
-  $homedir              = "/home/${name}",
-  $auth                 = $st2::auth,
-  $api_url              = $st2::cli_api_url,
-  $auth_url             = $st2::cli_auth_url,
-  $base_url             = $st2::cli_base_url,
-  $username             = $st2::cli_username,
-  $password             = $st2::cli_password,
-  $disable_credentials  = false,
-  $api_version          = $st2::cli_api_version,
-  $cacert               = $st2::cli_cacert,
-  $debug                = $st2::cli_debug,
-  $cache_token          = $st2::cli_cache_token,
-  $silence_ssl_warnings = $st2::cli_silence_ssl_warnings,
+define st2::client::settings (
+  Stdlib::HTTPUrl        $api_url              = $st2::cli_api_url,
+  Pattern[/v[0-9]+/]     $api_version          = $st2::cli_api_version,
+  Boolean                $auth                 = $st2::auth,
+  Stdlib::HTTPUrl        $auth_url             = $st2::cli_auth_url,
+  Stdlib::HTTPUrl        $base_url             = $st2::cli_base_url,
+  Stdlib::Absolutepath   $cacert               = $st2::cli_cacert,
+  Boolean                $cache_token          = $st2::cli_cache_token,
+  Boolean                $debug                = $st2::cli_debug,
+  Boolean                $disable_credentials  = false,
+  Stdlib::Absolutepath   $homedir              = "/home/${name}",
+  String                 $password             = $st2::cli_password,
+  Boolean                $silence_ssl_warnings = $st2::cli_silence_ssl_warnings,
+  String                 $user                 = $name,
+  String                 $username             = $st2::cli_username,
 ) {
   Ini_setting {
     ensure  => present,
@@ -95,6 +66,7 @@ define st2::client::settings(
     setting => 'debug',
     value   => $_cli_debug,
   }
+
   $_cache_token = $cache_token ? {
     true    => 'True',
     default => 'False',
@@ -104,6 +76,7 @@ define st2::client::settings(
     setting => 'cache_token',
     value   => $_cache_token,
   }
+
   $_silence_ssl_warnings = $silence_ssl_warnings ? {
     true    => 'True',
     default => 'False',
@@ -113,6 +86,7 @@ define st2::client::settings(
     setting => 'silence_ssl_warnings',
     value   => $_silence_ssl_warnings,
   }
+
   if $auth {
     if ! $disable_credentials {
       ini_setting { "${user}-st2_cli_credentials_username":

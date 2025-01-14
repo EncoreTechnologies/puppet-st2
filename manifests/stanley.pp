@@ -26,13 +26,14 @@
 #  }
 #
 class st2::stanley (
-  $username        = 'stanley',
-  $ssh_public_key  = undef,
-  $ssh_key_type    = undef,
-  $ssh_private_key = undef,
-  $client          = true,
-  $server          = true,
+  String             $username         = 'stanley',
+  Optional[String]   $ssh_public_key   = undef,
+  Optional[String]   $ssh_key_type     = undef,
+  Optional[String]   $ssh_private_key  = undef,
+  Boolean            $client           = true,
+  Boolean            $server           = true,
 ) {
+  #
   st2::user { $username:
     client            => $client,
     server            => $server,
